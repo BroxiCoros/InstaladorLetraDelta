@@ -1,0 +1,180 @@
+name: Publish installer release
+
+# Se activa cuando se sube una etiqueta de versión vX.Y.Z
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  # También puede activarse manualmente desde la pestaña Acciones
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Clonado del repositorio
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configuración del SDK de .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Descargar apktool.jar
+        shell: pwsh
+        run: |
+          # Buscar la última versión de Apktool y descargar el .jar
+          $api = "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"
+          $headers = @{ "User-Agent" = "letradelta-installer-build" }
+          $release = Invoke-RestMethod -Uri $api -Headers $headers
+          $jarAsset = $release.assets | Where-Object { $_.name -like "apktool_*.jar" } | Select-Object -First 1
+          if (-not $jarAsset) {
+            throw "No se encontró apktool_*.jar en la última release de Apktool"
+          }
+          Write-Host "Descargando $($jarAsset.name)..."
+          Invoke-WebRequest -Uri $jarAsset.browser_download_url -OutFile "DeltaPatcherCLI/DeltaPatcher/apktool.jar"
+
+      - name: Compilar DeltaPatcherCLI (versión de lanzamiento, win-x64, archivo único)
+        shell: pwsh
+        working-directory: DeltaPatcherCLI/DeltaPatcher
+        run: |
+          dotnet publish DeltaPatcherCLI.csproj `
+            -c Release `
+            -r win-x64 `
+            --output publish `
+            -m:1
+          if (-not (Test-Path "publish/DeltaPatcherCLI.exe")) {
+            throw "DeltaPatcherCLI.exe no se generó"
+          }
+
+      - name: Empaquetar DeltaPatcherCLI.exe en DeltaPatcherCLI.7z
+        shell: pwsh
+        run: |
+          # 7zip viene preinstalado en windows-latest; usamos la ruta completa
+          # y caemos a PATH solo si no se encuentra en el lugar habitual.
+          $sevenZip = "C:\Program Files\7-Zip\7z.exe"
+          if (-not (Test-Path $sevenZip)) {
+            $sevenZip = "7z"  # confiar en PATH
+          }
+
+          # Comprimir desde dentro de publish/ para que el .exe quede en la raíz
+          # del .7z sin subcarpetas. El instalador espera exactamente esa estructura.
+          Push-Location "DeltaPatcherCLI/DeltaPatcher/publish"
+          & $sevenZip a -t7z -mx=9 "${{ github.workspace }}\DeltaPatcherCLI.7z" DeltaPatcherCLI.exe
+          Pop-Location
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "7z falló al crear DeltaPatcherCLI.7z (código $LASTEXITCODE)"
+          }
+          if (-not (Test-Path "DeltaPatcherCLI.7z")) {
+            throw "DeltaPatcherCLI.7z no se generó"
+          }
+
+      - name: Asegurar Inno Setup 6
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            Write-Host "ISCC.exe no encontrado, instalando vía choco..."
+            choco install innosetup -y --no-progress
+            if (-not (Test-Path $iscc)) {
+              throw "Inno Setup no se instaló correctamente"
+            }
+          }
+          Write-Host "Inno Setup listo en $iscc"
+
+      - name: Compilar el instalador (setup.iss)
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc setup.iss
+          if ($LASTEXITCODE -ne 0) {
+            throw "ISCC falló con código $LASTEXITCODE"
+          }
+          # Por defecto Inno Setup deja el .exe en .\Output\
+          if (-not (Test-Path "Output/InstaladorLetraDelta.exe")) {
+            throw "El instalador no se generó en Output/InstaladorLetraDelta.exe"
+          }
+
+      - name: Extraer descripción de la etiqueta desde el registro de cambios (si existe)
+        id: changelog
+        shell: pwsh
+        env:
+          VERSION_TAG: ${{ github.ref_name }}
+        run: |
+          $version = $env:VERSION_TAG -replace '^v',''
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+          # Si existe CHANGELOG.md con una entrada para esta versión, usarla
+          # Si no, dejar las notas de la versión en blanco (GitHub las puede generar luego)
+          if (Test-Path "CHANGELOG.md") {
+            Get-Content "CHANGELOG.md" -Raw | Out-File changelog.md
+          } else {
+            "Versión $env:VERSION_TAG del instalador de LetraDelta." | Out-File changelog.md
+          }
+
+      - name: Publicar la versión etiquetada (vX.Y.Z)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          VERSION_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create $env:VERSION_TAG `
+            --title "Versión ${{ steps.changelog.outputs.version }}" `
+            --notes-file changelog.md `
+            --latest `
+            "Output/InstaladorLetraDelta.exe"
+
+      - name: Mover la etiqueta 'latest' al commit actual
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git tag -f latest
+          git push -f origin latest
+
+      - name: Actualizar la publicación 'latest' (URL de descarga estable)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          VERSION_TAG: ${{ github.ref_name }}
+        run: |
+          $notes = @"
+          Contiene siempre el ``InstaladorLetraDelta.exe`` de la versión más reciente.
+
+          **Versión actual:** [``$env:VERSION_TAG``](https://github.com/${{ github.repository }}/releases/tag/$env:VERSION_TAG)
+
+          El changelog de cada versión está en su Release correspondiente.
+          "@
+
+          $exists = (gh release view latest 2>$null)
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit latest --notes $notes
+            gh release upload latest "Output/InstaladorLetraDelta.exe" --clobber
+          } else {
+            gh release create latest `
+              --title "Latest" `
+              --notes $notes `
+              --latest=false `
+              "Output/InstaladorLetraDelta.exe"
+          }
+
+      - name: Subir el .exe como artefacto (siempre, incluso en ejecución manual)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: InstaladorLetraDelta
+          path: Output/InstaladorLetraDelta.exe
+          if-no-files-found: warn

@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <DebugType>embedded</DebugType>
+    <!-- Idioma neutral del binario: español. Si se forkea para otro idioma,
+         cambiar aquí, en LocalizedText.cs y en setup.iss. -->
+    <NeutralLanguage>es</NeutralLanguage>
+    <ResourceLanguages>es</ResourceLanguages>
+    <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>LetraDelta Patcher CLI</Product>
+    <AssemblyTitle>DeltaPatcherCLI</AssemblyTitle>
+    <CompanyName>BroxiCoros</CompanyName>
+    <Copyright>Copyright 2026 BroxiCoros (fork de DeltaPatcherCLI por LazyDesman, 2025)</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
+    <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
+    <TrimmerRootAssembly Include="Underanalyzer" />
+    <TrimmerRootAssembly Include="UndertaleModLib" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="LocalizedText.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="apktool.jar" />
+    <EmbeddedResource Include="apktool.jar" />
+  </ItemGroup>
+
+  <Target Name="DeleteXML" AfterTargets="AfterPublish">
+    <Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
+    <Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
+  </Target>
+
+  <PropertyGroup>
+    <TrimMode>copyused</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+</Project>

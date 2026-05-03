@@ -1,0 +1,3 @@
+[submodule "DeltaPatcherCLI/UndertaleModTool"]
+	path = DeltaPatcherCLI/UndertaleModTool
+	url = https://github.com/UnderminersTeam/UndertaleModTool.git
