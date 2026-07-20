@@ -88,13 +88,14 @@ class Program
                 // tablas internas de Data (VARI/FUNC) de forma que el descompilador
                 // resuelva funciones/variables de obj_time_Draw_77 de manera diferente
                 // a como lo hace en el flujo manual de UTMT.
-                string[] chapterNames  = { "Chapter1", "Chapter2", "Chapter3", "Chapter4" };
+                string[] chapterNames  = { "Chapter1", "Chapter2", "Chapter3", "Chapter4", "Chapter5" };
                 string[] chapterDataWins =
                 {
                     @"chapter1_windows\data.win",
                     @"chapter2_windows\data.win",
                     @"chapter3_windows\data.win",
                     @"chapter4_windows\data.win",
+                    @"chapter5_windows\data.win",
                 };
                 for (int ci = 0; ci < chapterNames.Length; ci++)
                 {
@@ -131,6 +132,9 @@ class Program
                              break;
                          case "chapter4_windows.apk":
                              await ApplyChapterPatch(gamePath, scriptsPath, "Chapter4", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             break;
+                         case "chapter5_windows.apk":
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter5", file.Name.Replace(".apk", "") + @"\assets\game.droid");
                              break;
                      }
 

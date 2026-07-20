@@ -42,20 +42,21 @@ tr.wpWelcome2=¿Qué se va a instalar?
 tr.wpWelcome3=La instalación de la traducción incluye:
 tr.wpWelcome3a= • Mod de "Deltranslate"
 tr.wpWelcome4= • Traducción completa del capítulo 1
-tr.wpWelcome5= • Traducción del capítulo 2 (en curso)
-tr.wpWelcome6= • Traducción del capítulo 3 (en curso)
-tr.wpWelcome7= • Traducción del capítulo 4 (en curso)
+tr.wpWelcome5= • Traducción completa del capítulo 2
+tr.wpWelcome6= • Traducción completa del capítulo 3
+tr.wpWelcome7= • Traducción completa del capítulo 4
+tr.wpWelcome8= • Traducción completa del capítulo 5
 tr.wpWelcome9=La traducción se aplicará sobre la instalación actual del juego.
 tr.wpWelcome10=Las partidas guardadas no se verán afectadas.
 tr.CreateInputDirPage1=Selecciona la carpeta de DELTARUNE
 tr.CreateInputDirPage2=¿Dónde está instalado el juego?
-tr.CreateInputDirPage3=Selecciona la carpeta que contiene "DELTARUNE.exe" y las carpetas "chapter1_windows" ... "chapter4_windows".
+tr.CreateInputDirPage3=Selecciona la carpeta que contiene "DELTARUNE.exe" y las carpetas "chapter1_windows" ... "chapter5_windows".
 tr.CreateInputDirPage4=Suele tener este aspecto: 
 tr.FinishedText1=La traducción al español se ha instalado correctamente en tu equipo.
 tr.FinishedText2=Pulsa «Finalizar» para salir del instalador.
 tr.ProgressPage1a=Realizando la instalación
 tr.ProgressPage1b=Por favor, espera...
-tr.FoundGameLoc1=DELTARUNE (Capítulos 1-4) no se encontró en las carpetas predeterminadas. Indica la ruta manualmente.
+tr.FoundGameLoc1=DELTARUNE (Capítulos 1-5) no se encontró en las carpetas predeterminadas. Indica la ruta manualmente.
 tr.FoundGameLoc2=No se encontró "DELTARUNE.exe" en la carpeta indicada.
 tr.ProgressPage2a= MB
 tr.ProgressPage2b=Tamaño del archivo: 
@@ -87,10 +88,8 @@ tr.OfflineQuestion2=Se encontró un archivo scripts.7z junto al instalador. ¿Us
 tr.wpWelcome11=Si descargas previamente los archivos %s y los colocas junto a este instalador, se te preguntará si quieres usarlos en vez de descargarlos.
 tr.DeltaQuick1=Aplicar la traducción a los APK de DeltaQuick (Android)
 tr.Borders1=Instalar versión con bordes (NXRUNE)
-tr.EnglishPack1=Instalar el idioma inglés
 tr.OptionsPage1=Opciones de instalación
 tr.OptionsPage2=Selecciona las opciones que apliquen a tu caso. Si no estás seguro, deja todo como está.
-tr.OptionsPageEnglishHelp=Permite alternar entre español e inglés desde el menú del juego. Si no marcas esta casilla, solo estará disponible el español.
 tr.OptionsPageBordersHelp=Añade los bordes decorativos de las versiones de consola. Variante visual basada en NXRUNE.
 tr.OptionsPageDeltaQuickHelp=Para usuarios de Android (DeltaQuick). En este modo no se parchea el juego de escritorio.
 
@@ -127,14 +126,12 @@ var
 
   // Casillas de la pagina de opciones (OptionsPage). Se crean en
   // InitializeWizard y se leen al pulsar Siguiente desde esa pagina.
-  EnglishPackCheckbox: TNewCheckBox;
   BordersCheckbox: TNewCheckBox;
   DeltaQuickCheckbox: TNewCheckBox;
 
   // Variables booleanas que reflejan el estado de las casillas tras
   // confirmar la pagina de opciones. Se consultan luego en
   // DownloadAndExtractFiles.
-  InstallEnglishPack: Boolean;
   InstallBorders: Boolean;
   PatchDeltaQuick: Boolean;
 
@@ -160,7 +157,7 @@ function CheckDeltaruneLoc(DirPath: String): Boolean;
 begin
   Result := FileExists(DirPath + DeltaruneExe);
   if Result then
-    Result := FileExists(AddBackslash(DirPath) + 'chapter4_windows\data.win');
+    Result := FileExists(AddBackslash(DirPath) + 'chapter5_windows\data.win');
 end;
 
 // Search for the DELTARUNE folder
@@ -221,11 +218,10 @@ end;
 // tocar el data.win. Si el usuario marca una de las dos, desmarcamos
 // la otra al vuelo.
 //
-// El pack de ingles SI es compatible con DeltaQuick: los archivos de
-// idioma se extraen en la carpeta indicada por el usuario (la del
-// juego en escritorio, la que contiene los APK en Android) y el mod
-// los detecta sin distincion de plataforma. Por eso esa casilla no
-// participa en la exclusion mutua.
+// El pack de ingles ya no es una opcion: se instala siempre junto al
+// espanol para poder alternar de idioma desde el menu del juego. Es
+// compatible con ambas plataformas (escritorio y DeltaQuick), asi que
+// no participa en esta exclusion.
 procedure DeltaQuickCheckboxClick(Sender: TObject);
 begin
   if DeltaQuickCheckbox.Checked then
@@ -259,7 +255,8 @@ begin
     CustomMessage('wpWelcome4') + #13#10 +
     CustomMessage('wpWelcome5') + #13#10 +
     CustomMessage('wpWelcome6') + #13#10 +
-    CustomMessage('wpWelcome7') + #13#10#13#10 +
+    CustomMessage('wpWelcome7') + #13#10 +
+    CustomMessage('wpWelcome8') + #13#10#13#10 +
     CustomMessage('wpWelcome9') + #13#10 +
     CustomMessage('wpWelcome10') + #13#10#13#10 +
     Format(CustomMessage('wpWelcome11'), ['"lang_es.7z", "lang_en.7z" y "scripts.7z"'])
@@ -275,37 +272,6 @@ begin
   );
 
   OffsetY := 0;
-
-  EnglishPackCheckbox := TNewCheckBox.Create(OptionsPage);
-  with EnglishPackCheckbox do
-  begin
-    Parent := OptionsPage.Surface;
-    Top := OffsetY;
-    Left := 0;
-    Width := OptionsPage.SurfaceWidth;
-    Caption := CustomMessage('EnglishPack1');
-    // Activado por defecto: la mayoria de usuarios prefieren conservar
-    // el ingles disponible en el menu para poder alternar. Esta casilla
-    // ya no se desactiva al marcar DeltaQuick: el pack de ingles es
-    // compatible con el modo Android.
-    Checked := True;
-  end;
-  OffsetY := OffsetY + EnglishPackCheckbox.Height + 4;
-
-  HelpLabel := TNewStaticText.Create(OptionsPage);
-  with HelpLabel do
-  begin
-    Parent := OptionsPage.Surface;
-    Top := OffsetY;
-    Left := 24;
-    Width := OptionsPage.SurfaceWidth - 24;
-    AutoSize := False;
-    WordWrap := True;
-    Height := ScaleY(28);
-    Caption := CustomMessage('OptionsPageEnglishHelp');
-    Font.Color := clGrayText;
-  end;
-  OffsetY := OffsetY + HelpLabel.Height + 12;
 
   BordersCheckbox := TNewCheckBox.Create(OptionsPage);
   with BordersCheckbox do
@@ -390,7 +356,6 @@ begin
 
   if CurPageID = OptionsPage.ID then
   begin
-    InstallEnglishPack := EnglishPackCheckbox.Checked;
     InstallBorders     := BordersCheckbox.Checked;
     PatchDeltaQuick    := DeltaQuickCheckbox.Checked;
 
@@ -592,22 +557,18 @@ begin
     else
       DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1'), LangESURL, LangESURLMirror, 'lang_es.7z');
 
-    // ---- Pack de idioma inglés (LetraDelta-EN) — opcional ----
-    // Solo se descarga (o se busca local) si el usuario marcó la casilla
-    // en la página de opciones. Si no la marcó, el juego queda con el
-    // español como único idioma disponible en el menú in-game.
-    if InstallEnglishPack then
+    // ---- Pack de idioma inglés (LetraDelta-EN) — siempre ----
+    // El inglés se instala siempre junto al español para poder alternar
+    // de idioma desde el menú del juego. Ya no es una opción del wizard.
+    if FileExists(ExpandConstant('{src}\lang_en.7z')) then
     begin
-      if FileExists(ExpandConstant('{src}\lang_en.7z')) then
-      begin
-        if MsgBox(CustomMessage('OfflineQuestion1b'), mbConfirmation, MB_YESNO) = IDYES then
-          CopyFile(ExpandConstant('{src}\lang_en.7z'), LangENZipPath, False)
-        else
-          DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1b'), LangENURL, LangENURLMirror, 'lang_en.7z');
-      end
+      if MsgBox(CustomMessage('OfflineQuestion1b'), mbConfirmation, MB_YESNO) = IDYES then
+        CopyFile(ExpandConstant('{src}\lang_en.7z'), LangENZipPath, False)
       else
         DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1b'), LangENURL, LangENURLMirror, 'lang_en.7z');
-    end;
+    end
+    else
+      DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1b'), LangENURL, LangENURLMirror, 'lang_en.7z');
 
     // ---- Scripts del mod (incluye Borders.csx + PNGs si --borders) ----
     if FileExists(ExpandConstant('{src}\scripts.7z')) then
@@ -632,15 +593,11 @@ begin
     // Cada pack de idioma trae una subcarpeta `lang/<code>/` distinta,
     // así que extraer ambos sobre la misma carpeta del juego coexisten
     // sin chocar. El mod escanea `lang/*/settings.json` y los detecta.
-    // El pack de inglés solo se extrae si el usuario lo solicitó.
     ProgressPage.SetText(CustomMessage('ProgressPage3b'), '');
     ExtractArchive(LangESZipPath, GamePath);
 
-    if InstallEnglishPack then
-    begin
-      ProgressPage.SetText(CustomMessage('ProgressPage3b2'), '');
-      ExtractArchive(LangENZipPath, GamePath);
-    end;
+    ProgressPage.SetText(CustomMessage('ProgressPage3b2'), '');
+    ExtractArchive(LangENZipPath, GamePath);
 
     ProgressPage.SetText(CustomMessage('ProgressPage3c'), '');
     ExtractArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));

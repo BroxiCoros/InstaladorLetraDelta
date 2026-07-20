@@ -8,7 +8,8 @@ Instalador para Windows de la traducción al español americano de **DELTARUNE**
 
 - **Edición compatible:** [Steam](https://store.steampowered.com/app/1671210/DELTARUNE/).
 - **Versión del juego compatible:** 1.04 (v17).
-- **Idioma:** español americano (es_mx). Opcionalmente puedes mantener también el inglés disponible.
+- **Idioma:** español americano (es_mx). El inglés original también queda disponible para poder alternar desde el menú del juego.
+- **Contenido:** traducción completa de los capítulos 1 a 5.
 - Las partidas guardadas no se ven afectadas por la instalación.
 - La traducción intenta ser fiel a la obra original. Es apta tanto para nuevos jugadores como para quienes ya conocen el juego y quieren disfrutarlo en su idioma.
 - Si encuentras cualquier error, por favor toma una captura de pantalla y comunícalo por los canales de [*LetraDelta*](https://github.com/BroxiCoros/LetraDelta).
@@ -26,15 +27,14 @@ Instalador para Windows de la traducción al español americano de **DELTARUNE**
 
 ### Opciones de instalación
 
-En la página de opciones del asistente puedes activar o desactivar tres casillas:
+En la página de opciones del asistente puedes activar o desactivar dos casillas:
 
-- **Instalar el idioma inglés** — añade el inglés como idioma seleccionable desde el menú interno del juego, junto al español. Activada por defecto, ya que conservar el idioma original suele ser lo deseado. Si la desmarcas, el juego queda únicamente en español.
 - **Instalar versión con bordes (NXRUNE)** — variante visual que añade bordes decorativos en pantalla, basada en NXRUNE. Por defecto está desactivada y se instala la versión estándar.
 - **Aplicar la traducción a los APK de DeltaQuick (Android)** — para usuarios de la aplicación de Android. Ver la sección «Android (DeltaQuick)» más abajo.
 
-> Las dos últimas casillas son **mutuamente excluyentes**: la versión con bordes solo aplica al juego de escritorio (no se puede aplicar a los APK), así que si marcas una de las dos, la otra se desactiva automáticamente.
->
-> El pack de inglés, en cambio, **sí es compatible con DeltaQuick**: puedes activarlo aunque vayas a parchear los APK de Android.
+> Ambas casillas son **mutuamente excluyentes**: la versión con bordes solo aplica al juego de escritorio (no se puede aplicar a los APK), así que si marcas una de las dos, la otra se desactiva automáticamente.
+
+El **idioma inglés** se instala siempre junto al español, para que puedas alternar entre ambos desde el menú interno del juego. Es compatible tanto con el juego de escritorio como con DeltaQuick.
 
 ### Instalación sin conexión
 
@@ -42,7 +42,7 @@ Si descargas previamente los archivos correspondientes y los colocas junto a `In
 
 - `lang_es.7z` — pack de español. Indispensable.
 - `scripts.7z` — *scripts* del mod. Indispensable.
-- `lang_en.7z` — pack de inglés. Solo necesario si marcas la casilla correspondiente.
+- `lang_en.7z` — pack de inglés. Indispensable (se instala siempre).
 
 ---
 
@@ -58,7 +58,7 @@ Para jugar la versión traducida en Android, el flujo es algo más largo porque 
 2. Copia al teléfono los archivos del juego **sin modificar** y selecciona la carpeta correspondiente desde la app.
 3. Cuando termine el parcheado interno de DeltaQuick, abre el *save manager* de la app y, con el botón «Extract», extrae los archivos `.apk` de la carpeta `packs` a tu teléfono.
 4. Copia esos archivos `.apk` a una carpeta de tu PC y ejecuta `InstaladorLetraDelta.exe`.
-5. En la página de opciones, marca **«Aplicar la traducción a los APK de DeltaQuick (Android)»**. Si quieres conservar también el inglés, deja marcada esa otra casilla.
+5. En la página de opciones, marca **«Aplicar la traducción a los APK de DeltaQuick (Android)»**.
 6. En la siguiente página, selecciona la carpeta donde colocaste los `.apk` y completa la instalación.
 7. Al terminar se habrán creado una carpeta `translated` y una carpeta `lang`. Comprime la carpeta `lang` en un archivo llamado `lang.zip`. Después, vuelve a copiar tanto el `lang.zip` como los `.apk` parcheados al teléfono.
 8. En DeltaQuick, con el botón «Load files», coloca el `lang.zip` en la carpeta principal (al lado de `packs`) y los `.apk` de `translated/` de vuelta dentro de la carpeta `packs`.
