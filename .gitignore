@@ -1,0 +1,14 @@
+# Compilación de .NET
+bin/
+obj/
+publish*/
+
+# Salida de Inno Setup
+Output/
+
+# Descargado por el workflow de CI, no se versiona
+DeltaPatcherCLI/DeltaPatcher/apktool.jar
+DeltaPatcherCLI.7z
+
+# Registros del parcheador
+deltapatcher-log.txt
