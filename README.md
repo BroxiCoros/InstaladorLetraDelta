@@ -1,6 +1,6 @@
 # LetraDelta — Instalador
 
-Instalador para Windows de la traducción al español americano de **DELTARUNE** (proyecto [*LetraDelta*](https://github.com/BroxiCoros/LetraDelta)). Aplica el mod [*Deltranslate*](https://github.com/BroxiCoros/DeltranslatePatch) y los archivos de idioma sobre tu copia del juego en uno o dos clics.
+Instalador para Windows y Linux de la traducción al español americano de **DELTARUNE** (proyecto [*LetraDelta*](https://github.com/BroxiCoros/LetraDelta)). Aplica el mod [*Deltranslate*](https://github.com/BroxiCoros/DeltranslatePatch) y los archivos de idioma sobre tu copia del juego en uno o dos clics.
 
 ---
 
@@ -43,6 +43,37 @@ Si descargas previamente los archivos correspondientes y los colocas junto a `In
 - `lang_es.7z` — pack de español. Indispensable.
 - `scripts.7z` — *scripts* del mod. Indispensable.
 - `lang_en.7z` — pack de inglés. Indispensable (se instala siempre).
+
+---
+
+## Instalación (Linux)
+
+En Linux *DELTARUNE* se ejecuta con Proton, pero los archivos del juego son exactamente los mismos que en Windows, así que la traducción se aplica igual y funciona igual.
+
+1. Descarga `InstaladorLetraDelta-x86_64.AppImage` desde la sección de [*releases*](../../releases/latest).
+2. Dale permiso de ejecución. Desde el gestor de archivos: clic derecho → «Propiedades» → «Permisos» → marcar «Es ejecutable». Desde la terminal:
+   ```sh
+   chmod +x InstaladorLetraDelta-x86_64.AppImage
+   ```
+3. Ábrelo con doble clic y sigue el asistente. Es el mismo recorrido que en Windows: bienvenida, opciones, carpeta del juego e instalación.
+
+**No hace falta instalar nada más.** El AppImage lleva dentro todo lo que necesita, incluidos el parcheador y 7-Zip, así que funciona en cualquier distribución sin tocar el gestor de paquetes.
+
+El instalador **detecta la carpeta del juego automáticamente**: busca en las bibliotecas de Steam declaradas en `libraryfolders.vdf`, así que encuentra el juego aunque esté en un segundo disco o en la microSD de una Steam Deck, y reconoce tanto el Steam nativo como el de Flatpak. Si no lo encuentra, puedes indicar la carpeta a mano.
+
+Al terminar, si nunca habías elegido un idioma dentro del mod, queda fijado el español. El instalador escribe esa preferencia dentro del prefijo de Proton del juego, que es donde el juego la busca de verdad. Si el juego no se ha ejecutado nunca, el prefijo todavía no existe y el idioma se elige desde el menú del juego.
+
+### Steam Deck
+
+Funciona en modo escritorio: descarga el AppImage, dale permiso de ejecución desde Dolphin y ábrelo con doble clic.
+
+### Cómo revertir la traducción
+
+En Steam, clic derecho sobre *DELTARUNE* → «Propiedades» → «Archivos instalados» → «Verificar la integridad de los archivos del juego». Steam restaura los archivos originales.
+
+### Instalación sin conexión
+
+Igual que en Windows: si dejas `lang_es.7z`, `lang_en.7z` o `scripts.7z` en la misma carpeta que el AppImage, se usan en lugar de descargarlos.
 
 ---
 
@@ -91,6 +122,10 @@ A **Neprim**, autor de [*Deltranslate*](https://github.com/Lazy-Desman/Deltransl
 A **UnderminersTeam**, por [UndertaleModTool](https://github.com/UnderminersTeam/UndertaleModTool), incluido en el CLI.
 
 A **iBotPeaches**, por [Apktool](https://github.com/iBotPeaches/Apktool), utilizado para parchear los APK de *DeltaQuick*.
+
+A **Igor Pavlov**, por [7-Zip](https://7-zip.org/), cuyo binario para Linux viaja dentro del AppImage para descomprimir los packs.
+
+Al equipo de [**Avalonia**](https://avaloniaui.net/), con la que está hecho el asistente gráfico de Linux.
 
 A **BroxiCoros**, traducción y mantenimiento de *LetraDelta* y este instalador.
 
