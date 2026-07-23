@@ -9,6 +9,9 @@ public enum ResultadoIdioma
     YaEstaba,
     /// No se encontró el prefijo de Proton: el juego nunca se ha ejecutado.
     SinPrefijo,
+    /// La carpeta de datos del juego no existe todavía. No se toca: crearla
+    /// impediría que Steam restaure las partidas desde la nube.
+    SinCarpeta,
 }
 
 /// <summary>
@@ -36,9 +39,15 @@ public static class Configuracion
         if (string.IsNullOrEmpty(rutaIni))
             return ResultadoIdioma.SinPrefijo;
 
+        // NUNCA se crea la carpeta. Steam la borra entera al desinstalar el
+        // juego, y usa esa ausencia como señal para restaurar las partidas
+        // desde la nube en el siguiente arranque. Si el instalador la recrea
+        // con un true_config.ini dentro, Steam ve contenido local, da por hecho
+        // que las partidas ya están, y no descarga nada: el jugador se queda
+        // sin ellas. Vale mil veces más no fijar el idioma que provocar eso.
         string carpeta = Path.GetDirectoryName(rutaIni);
-        if (!string.IsNullOrEmpty(carpeta))
-            Directory.CreateDirectory(carpeta);
+        if (string.IsNullOrEmpty(carpeta) || !Directory.Exists(carpeta))
+            return ResultadoIdioma.SinCarpeta;
 
         if (!File.Exists(rutaIni))
         {
