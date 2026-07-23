@@ -178,3 +178,49 @@ jobs:
           name: InstaladorLetraDelta
           path: Output/InstaladorLetraDelta.exe
           if-no-files-found: warn
+
+  # Instalador de Linux: AppImage con el asistente gráfico y el parcheador
+  # dentro. De momento solo publica el artefacto; la subida a la release se
+  # unificará con la de Windows cuando el asistente esté terminado.
+  build-appimage-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonado del repositorio
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configuración del SDK de .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Dependencias del empaquetado
+        # ImageMagick convierte icon.ico al PNG que pide la especificación de
+        # iconos; desktop-file-utils lo usa appimagetool para validar el
+        # .desktop antes de empaquetar.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends imagemagick desktop-file-utils
+
+      - name: Construir el AppImage
+        run: bash linux/packaging/build-appimage.sh
+
+      - name: Comprobar que el AppImage arranca
+        # Sin escritorio no se puede abrir la ventana, pero sí verificar que el
+        # runtime monta el AppDir y que el parcheador viaja dentro y responde.
+        run: |
+          ./Output/InstaladorLetraDelta-x86_64.AppImage --appimage-extract > /dev/null
+          test -x squashfs-root/usr/bin/InstaladorLetraDelta
+          test -x squashfs-root/usr/bin/DeltaPatcherCLI
+          ./squashfs-root/usr/bin/DeltaPatcherCLI | head -5
+          rm -rf squashfs-root
+
+      - name: Subir el AppImage como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: InstaladorLetraDelta-AppImage
+          path: Output/InstaladorLetraDelta-x86_64.AppImage
+          if-no-files-found: warn
