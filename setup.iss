@@ -515,24 +515,6 @@ begin
   end;
 end;
 
-// Establece "es_mx" como idioma por defecto en true_config.ini si la
-// clave LANG_DT aún no existe. Si el usuario ya jugó con el mod y
-// eligió otro idioma, lo respetamos. Esto solo cubre primer install
-// (true_config.ini sin sección [LANG]) o instalaciones limpias.
-procedure SetSpanishAsDefaultIfUnset;
-var
-  IniPath, IniDir, Existing: String;
-begin
-  IniPath := ExpandConstant('{localappdata}\DELTARUNE\true_config.ini');
-  IniDir := ExtractFilePath(IniPath);
-  if not DirExists(IniDir) then
-    ForceDirectories(IniDir);
-
-  Existing := GetIniString('LANG', 'LANG_DT', '', IniPath);
-  if Existing = '' then
-    SetIniString('LANG', 'LANG_DT', 'es_mx', IniPath);
-end;
-
 function DownloadAndExtractFiles(): Boolean;
 var
   LangESZipPath, LangENZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg, ArgString: String;
@@ -629,10 +611,12 @@ begin
       Exit;
     end;
 
-    // Tras un parche exitoso, dejar es_mx como idioma por defecto si
-    // el usuario aún no había configurado uno.
-    if not PatchDeltaQuick then
-      SetSpanishAsDefaultIfUnset;
+    // El instalador NO toca la configuración ni los datos guardados del juego.
+    // El mod ya arranca con el pack de idioma instalado, y escribir en
+    // %LOCALAPPDATA%\DELTARUNE tiene un efecto secundario grave: Steam usa la
+    // ausencia de esa carpeta como señal para restaurar las partidas desde la
+    // nube, así que crearla puede dejar al jugador sin ellas. El idioma se
+    // cambia desde el menú del juego.
   except
     ExceptionMsg := GetExceptionMessage();
     if ExceptionMsg <> 'empty' then

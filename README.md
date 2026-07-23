@@ -23,7 +23,7 @@ Instalador para Windows de la traducción al español americano de **DELTARUNE**
 3. En la página de opciones, marca o desmarca las casillas según prefieras (ver «Opciones de instalación» más abajo).
 4. El instalador detecta automáticamente la carpeta de *DELTARUNE* en las ubicaciones habituales (Steam, Steam Deck, Program Files). Si no la encuentra, te la pedirá manualmente.
 5. Pulsa «Instalar». El asistente descarga los archivos necesarios y aplica el parche.
-6. Listo. El juego queda traducido. Si nunca habías configurado un idioma dentro del mod, queda fijado el español como predeterminado.
+6. Listo. El juego queda traducido. Puedes alternar entre español e inglés desde el menú del juego cuando quieras.
 
 ### Opciones de instalación
 
