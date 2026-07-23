@@ -24,6 +24,21 @@ GUI_PROJECT="$REPO_ROOT/linux/InstaladorLetraDelta/InstaladorLetraDelta.csproj"
 CLI_PROJECT="$REPO_ROOT/DeltaPatcherCLI/DeltaPatcher/DeltaPatcherCLI.csproj"
 APKTOOL_JAR="$REPO_ROOT/DeltaPatcherCLI/DeltaPatcher/apktool.jar"
 
+# 7-Zip oficial para Linux. Se empaqueta el binario `7zzs`, que está enlazado
+# de forma totalmente estática: funciona en cualquier distribución sin
+# dependencias, incluida SteamOS, donde el usuario no puede instalar paquetes.
+#
+# Por qué se empaqueta en vez de descomprimir desde C# con SharpCompress:
+# los packs de LetraDelta son .7z sólidos con LZMA2, y en ellos el decodificador
+# gestionado de SharpCompress es unas 275 veces más lento. Medido sobre los
+# archivos reales, en un solo hilo: lang.7z tarda 165 s con SharpCompress
+# frente a 0,6 s con 7zzs, y scripts.7z 159 s frente a 0,6 s. El resultado de
+# ambos es idéntico byte a byte; el problema es solo de velocidad, pero
+# convertiría la instalación en cinco minutos de barra de progreso parada.
+SEVENZIP_VERSION="7z2501"
+SEVENZIP_URL="https://7-zip.org/a/${SEVENZIP_VERSION}-linux-x64.tar.xz"
+SEVENZIP_SHA256="4ca3b7c6f2f67866b92622818b58233dc70367be2f36b498eb0bdeaaa44b53f4"
+
 log() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 
 # ---------------------------------------------------------------------------
@@ -58,6 +73,17 @@ dotnet publish "$CLI_PROJECT" -c Release -r linux-x64 \
   --output "$BUILD_DIR/cli" --nologo -v quiet -m:1
 cp "$BUILD_DIR/cli/DeltaPatcherCLI" "$APPDIR/usr/bin/DeltaPatcherCLI"
 chmod +x "$APPDIR/usr/bin/DeltaPatcherCLI"
+
+log "Empaquetando 7-Zip ($SEVENZIP_VERSION)"
+mkdir -p "$BUILD_DIR/7zip"
+curl -fsSL -o "$BUILD_DIR/7zip.tar.xz" "$SEVENZIP_URL"
+echo "$SEVENZIP_SHA256  $BUILD_DIR/7zip.tar.xz" | sha256sum -c - >/dev/null
+tar xf "$BUILD_DIR/7zip.tar.xz" -C "$BUILD_DIR/7zip" 7zzs License.txt
+cp "$BUILD_DIR/7zip/7zzs" "$APPDIR/usr/bin/7zzs"
+chmod +x "$APPDIR/usr/bin/7zzs"
+# 7-Zip es LGPL; su licencia viaja junto al binario.
+mkdir -p "$APPDIR/usr/share/doc/7-zip"
+cp "$BUILD_DIR/7zip/License.txt" "$APPDIR/usr/share/doc/7-zip/License.txt"
 
 # ---------------------------------------------------------------------------
 # Metadatos del AppDir

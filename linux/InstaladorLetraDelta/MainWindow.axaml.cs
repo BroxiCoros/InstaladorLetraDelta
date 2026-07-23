@@ -8,8 +8,9 @@ namespace InstaladorLetraDelta;
 
 public partial class MainWindow : Window
 {
-    // Nombre del parcheador que viaja dentro del AppImage, junto a este binario.
+    // Binarios que viajan dentro del AppImage, junto a este ejecutable.
     private const string PatcherName = "DeltaPatcherCLI";
+    private const string SevenZipName = "7zzs";
 
     public MainWindow()
     {
@@ -27,8 +28,8 @@ public partial class MainWindow : Window
         string appImage = Environment.GetEnvironmentVariable("APPIMAGE");
         bool empaquetado = !string.IsNullOrEmpty(appImage);
 
-        string patcherPath = Path.Combine(AppContext.BaseDirectory, PatcherName);
-        bool hayPatcher = File.Exists(patcherPath);
+        bool hayPatcher = File.Exists(Path.Combine(AppContext.BaseDirectory, PatcherName));
+        bool haySevenZip = File.Exists(Path.Combine(AppContext.BaseDirectory, SevenZipName));
 
         var panel = this.FindControl<StackPanel>("DiagnosticsPanel");
         panel.Children.Add(Linea(
@@ -39,6 +40,10 @@ public partial class MainWindow : Window
             hayPatcher,
             hayPatcher ? $"Parcheador encontrado: {PatcherName}"
                        : $"No se encontró {PatcherName} junto al instalador"));
+        panel.Children.Add(Linea(
+            haySevenZip,
+            haySevenZip ? $"Descompresor encontrado: {SevenZipName}"
+                        : $"No se encontró {SevenZipName} junto al instalador"));
     }
 
     // Una línea de resultado con su marca de correcto/pendiente delante.
