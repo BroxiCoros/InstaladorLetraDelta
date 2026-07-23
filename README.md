@@ -23,7 +23,7 @@ Instalador para Windows y Linux de la traducción al español americano de **DEL
 3. En la página de opciones, marca o desmarca las casillas según prefieras (ver «Opciones de instalación» más abajo).
 4. El instalador detecta automáticamente la carpeta de *DELTARUNE* en las ubicaciones habituales (Steam, Steam Deck, Program Files). Si no la encuentra, te la pedirá manualmente.
 5. Pulsa «Instalar». El asistente descarga los archivos necesarios y aplica el parche.
-6. Listo. El juego queda traducido. Si nunca habías configurado un idioma dentro del mod, queda fijado el español como predeterminado.
+6. Listo. El juego queda traducido. Puedes alternar entre español e inglés desde el menú del juego cuando quieras.
 
 ### Opciones de instalación
 
@@ -61,7 +61,7 @@ En Linux *DELTARUNE* se ejecuta con Proton, pero los archivos del juego son exac
 
 El instalador **detecta la carpeta del juego automáticamente**: busca en las bibliotecas de Steam declaradas en `libraryfolders.vdf`, así que encuentra el juego aunque esté en un segundo disco o en la microSD de una Steam Deck, y reconoce tanto el Steam nativo como el de Flatpak. Si no lo encuentra, puedes indicar la carpeta a mano.
 
-Al terminar, si nunca habías elegido un idioma dentro del mod, queda fijado el español. El instalador escribe esa preferencia dentro del prefijo de Proton del juego, que es donde el juego la busca de verdad. Si el juego no se ha ejecutado nunca, el prefijo todavía no existe y el idioma se elige desde el menú del juego.
+El instalador **no modifica la configuración ni los datos guardados del juego**: se limita a los archivos de la carpeta de instalación. El idioma se elige desde el menú del juego.
 
 ### Steam Deck
 

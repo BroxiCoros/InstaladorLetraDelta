@@ -20,9 +20,9 @@ public partial class MainWindow : Window
 
         // Si se encuentra el juego, la casilla de la carpeta viene rellena; si
         // no, se deja vacía para que el usuario la indique a mano.
-        var instalacion = Steam.Detectar();
-        if (instalacion != null)
-            this.FindControl<TextBox>("CampoCarpeta").Text = instalacion.CarpetaJuego;
+        string carpetaJuego = Steam.Detectar();
+        if (carpetaJuego != null)
+            this.FindControl<TextBox>("CampoCarpeta").Text = carpetaJuego;
 
         MostrarPagina(Pagina.Bienvenida);
     }
@@ -212,16 +212,8 @@ public partial class MainWindow : Window
 
         if (_instalacionCorrecta)
         {
-            string idioma = instalador.Idioma switch
-            {
-                ResultadoIdioma.Fijado => "El español queda como idioma predeterminado.",
-                ResultadoIdioma.YaEstaba => "Se ha respetado el idioma que ya tenías elegido.",
-                _ => "El idioma no se ha fijado automáticamente porque el juego todavía no se ha " +
-                     "ejecutado. Puedes elegirlo desde el menú del juego.",
-            };
-
             texto.Text = "La traducción al español se ha instalado correctamente.\n\n" +
-                         idioma + "\n\n" +
+                         "Puedes cambiar de idioma en cualquier momento desde el menú del juego.\n\n" +
                          "Para revertirla, usa «Verificar integridad de los archivos» en Steam.";
         }
         else

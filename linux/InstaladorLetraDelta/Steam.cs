@@ -3,24 +3,10 @@ using System.Text.RegularExpressions;
 namespace InstaladorLetraDelta;
 
 /// <summary>
-/// Una instalación de DELTARUNE encontrada en el sistema.
-/// </summary>
-/// <param name="CarpetaJuego">Carpeta que contiene DELTARUNE.exe y los chapterN_windows.</param>
-/// <param name="Biblioteca">Raíz de la biblioteca de Steam que la contiene.</param>
-/// <param name="PrefijoProton">
-/// Prefijo de Proton del juego, o null si nunca se ha ejecutado. Ahí dentro
-/// vive el true_config.ini, que en Windows estaría en %LOCALAPPDATA%.
-/// </param>
-public sealed record InstalacionDeltarune(string CarpetaJuego, string Biblioteca, string PrefijoProton);
-
-/// <summary>
 /// Localiza DELTARUNE recorriendo las bibliotecas de Steam.
 /// </summary>
 public static class Steam
 {
-    /// AppID de DELTARUNE en Steam. Identifica también su prefijo de Proton.
-    public const string AppId = "1671210";
-
     /// <summary>
     /// Raíces donde puede vivir una instalación de Steam. Se comprueban todas
     /// porque conviven con frecuencia: el paquete nativo usa las tres primeras
@@ -101,18 +87,16 @@ public static class Steam
     }
 
     /// <summary>
-    /// Busca DELTARUNE en todas las bibliotecas y devuelve la primera
-    /// instalación válida, o null si no hay ninguna.
+    /// Busca DELTARUNE en todas las bibliotecas y devuelve la carpeta de la
+    /// primera instalación válida, o null si no hay ninguna.
     /// </summary>
-    public static InstalacionDeltarune Detectar()
+    public static string Detectar()
     {
         foreach (string biblioteca in Bibliotecas())
         {
             string juego = Path.Combine(biblioteca, "steamapps", "common", "DELTARUNE");
-            if (!EsInstalacionValida(juego))
-                continue;
-
-            return new InstalacionDeltarune(juego, biblioteca, BuscarPrefijoProton(biblioteca));
+            if (EsInstalacionValida(juego))
+                return juego;
         }
 
         return null;
@@ -132,44 +116,6 @@ public static class Steam
         return File.Exists(Path.Combine(carpetaJuego, "DELTARUNE.exe"))
             && File.Exists(Path.Combine(carpetaJuego, "chapter5_windows", "data.win"));
     }
-
-    /// <summary>
-    /// Devuelve el prefijo de Proton del juego dentro de esa biblioteca, o null
-    /// si no existe (el juego nunca se ha lanzado, o se ejecuta fuera de Steam).
-    /// </summary>
-    public static string BuscarPrefijoProton(string biblioteca)
-    {
-        string prefijo = Path.Combine(biblioteca, "steamapps", "compatdata", AppId, "pfx");
-        return Directory.Exists(prefijo) ? prefijo : null;
-    }
-
-    /// <summary>
-    /// Deduce la biblioteca a partir de la carpeta del juego, que en una
-    /// instalación de Steam siempre cuelga de `steamapps/common/`. Hace falta
-    /// cuando el usuario indica la carpeta a mano y no hemos llegado a ella por
-    /// la detección: sin la biblioteca no se puede localizar el prefijo.
-    /// Devuelve null si la carpeta no tiene esa forma.
-    /// </summary>
-    public static string BibliotecaDeJuego(string carpetaJuego)
-    {
-        var comun = Directory.GetParent(carpetaJuego?.TrimEnd(Path.DirectorySeparatorChar) ?? "");
-        if (comun is null || !comun.Name.Equals("common", StringComparison.Ordinal))
-            return null;
-
-        var steamapps = comun.Parent;
-        if (steamapps is null || !steamapps.Name.Equals("steamapps", StringComparison.Ordinal))
-            return null;
-
-        return steamapps.Parent?.FullName;
-    }
-
-    /// <summary>
-    /// Ruta del true_config.ini dentro de un prefijo de Proton. Es el
-    /// equivalente de %LOCALAPPDATA%\DELTARUNE\true_config.ini en Windows.
-    /// </summary>
-    public static string RutaConfig(string prefijoProton) =>
-        Path.Combine(prefijoProton, "drive_c", "users", "steamuser",
-                     "AppData", "Local", "DELTARUNE", "true_config.ini");
 
     /// <summary>
     /// Extrae las rutas de las bibliotecas de un libraryfolders.vdf.
