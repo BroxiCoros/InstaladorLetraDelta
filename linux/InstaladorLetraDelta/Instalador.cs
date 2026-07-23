@@ -28,6 +28,17 @@ public sealed class Instalador
     // que la opción de bordes no necesita ninguna descarga adicional.
     private const string UrlScripts = "https://github.com/BroxiCoros/DeltranslatePatch/releases/download/latest/scripts.7z";
 
+    // El avance se reparte entre todas las fases para que la barra signifique
+    // lo mismo de principio a fin, en vez de reiniciarse en cada descarga. Los
+    // tramos son aproximados y están repartidos según lo que tarda cada fase:
+    // las descargas ocupan hasta el 45 %, las descompresiones son casi
+    // instantáneas, y el parcheo se lleva toda la segunda mitad.
+    private const double InicioParcheo = 55;
+
+    // El parcheador procesa el menú y los cinco capítulos: seis hitos, que es
+    // lo que permite convertir la fase más larga en un avance real.
+    private const int ArchivosAParchear = 6;
+
     private readonly HttpClient _http = new();
     private readonly IProgress<Avance> _avance;
 
@@ -55,25 +66,27 @@ public sealed class Instalador
         try
         {
             string langEs = await ObtenerPackAsync("lang_es.7z", UrlLangEs, temporal,
-                                                   "Descargando archivos de idioma (español)...", ct);
+                                                   "Descargando archivos de idioma (español)...",
+                                                   0, 30, ct);
             string langEn = await ObtenerPackAsync("lang_en.7z", UrlLangEn, temporal,
-                                                   "Descargando archivos de idioma (inglés)...", ct);
+                                                   "Descargando archivos de idioma (inglés)...",
+                                                   30, 32, ct);
             string scripts = await ObtenerPackAsync("scripts.7z", UrlScripts, temporal,
-                                                    "Descargando scripts...", ct);
+                                                    "Descargando scripts...", 32, 45, ct);
 
             // Cada pack de idioma trae su propia subcarpeta lang/<código>, así
             // que ambos se descomprimen sobre la carpeta del juego sin chocar.
-            _avance.Report(new Avance("Descomprimiendo archivos de idioma (español)...", null));
+            Reportar("Descomprimiendo archivos de idioma (español)...", 45);
             await DescomprimirAsync(langEs, carpetaJuego, ct);
 
-            _avance.Report(new Avance("Descomprimiendo archivos de idioma (inglés)...", null));
+            Reportar("Descomprimiendo archivos de idioma (inglés)...", 50);
             await DescomprimirAsync(langEn, carpetaJuego, ct);
 
-            _avance.Report(new Avance("Descomprimiendo scripts...", null));
+            Reportar("Descomprimiendo scripts...", 52);
             string carpetaScripts = Path.Combine(temporal, "scripts");
             await DescomprimirAsync(scripts, carpetaScripts, ct);
 
-            _avance.Report(new Avance("Aplicando el parche...", null));
+            Reportar("Aplicando el parche...", InicioParcheo);
             string error = await ParchearAsync(carpetaJuego, carpetaScripts, conBordes, temporal, ct);
             if (error != null)
                 return error;
@@ -99,23 +112,28 @@ public sealed class Instalador
         }
     }
 
+    /// <summary>Comunica un avance global concreto.</summary>
+    private void Reportar(string texto, double porcentaje) =>
+        _avance.Report(new Avance(texto, porcentaje));
+
     /// <summary>
     /// Devuelve la ruta del pack: si el usuario dejó una copia junto al
     /// instalador la usa, y si no lo descarga. Es la instalación sin conexión
     /// que ya existe en la versión de Windows.
     /// </summary>
     private async Task<string> ObtenerPackAsync(string nombre, string url, string temporal,
-                                                string texto, CancellationToken ct)
+                                                string texto, double desde, double hasta,
+                                                CancellationToken ct)
     {
         string local = Path.Combine(CarpetaDelInstalador(), nombre);
         if (File.Exists(local))
         {
-            _avance.Report(new Avance($"Usando el archivo local {nombre}...", null));
+            Reportar($"Usando el archivo local {nombre}...", hasta);
             return local;
         }
 
         string destino = Path.Combine(temporal, nombre);
-        await DescargarAsync(url, destino, texto, ct);
+        await DescargarAsync(url, destino, texto, desde, hasta, ct);
         return destino;
     }
 
@@ -123,15 +141,15 @@ public sealed class Instalador
     /// Descarga un archivo informando del avance. Si el servidor no declara el
     /// tamaño, el avance queda indeterminado en vez de fingir un porcentaje.
     /// </summary>
-    private async Task DescargarAsync(string url, string destino, string texto, CancellationToken ct)
+    private async Task DescargarAsync(string url, string destino, string texto,
+                                      double desde, double hasta, CancellationToken ct)
     {
-        _avance.Report(new Avance(texto, null));
+        Reportar(texto, desde);
 
         using var respuesta = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         respuesta.EnsureSuccessStatusCode();
 
         long? total = respuesta.Content.Headers.ContentLength;
-        string tamano = total is > 0 ? $" ({total.Value / 1024.0 / 1024.0:F1} MB)" : "";
 
         await using var origen = await respuesta.Content.ReadAsStreamAsync(ct);
         await using var salida = File.Create(destino);
@@ -143,10 +161,23 @@ public sealed class Instalador
         {
             await salida.WriteAsync(bufer.AsMemory(0, leidos), ct);
             copiado += leidos;
-            _avance.Report(new Avance(texto + tamano,
-                                      total is > 0 ? copiado * 100.0 / total.Value : null));
+
+            // Con el tamaño declarado se puede mostrar cuánto llevamos; si el
+            // servidor no lo manda, al menos se ven los megas descargados.
+            if (total is > 0)
+            {
+                double fraccion = (double)copiado / total.Value;
+                Reportar($"{texto} {Megas(copiado)} de {Megas(total.Value)}",
+                         desde + (hasta - desde) * fraccion);
+            }
+            else
+            {
+                _avance.Report(new Avance($"{texto} {Megas(copiado)}", null));
+            }
         }
     }
+
+    private static string Megas(long bytes) => $"{bytes / 1024.0 / 1024.0:F1} MB";
 
     /// <summary>
     /// Descomprime un .7z con el 7-Zip que viaja dentro del AppImage.
@@ -176,7 +207,25 @@ public sealed class Instalador
         if (conBordes)
             argumentos.Add("--borders");
 
-        var (codigo, salida) = await EjecutarAsync(parcheador, argumentos, ct);
+        // El parcheador anuncia cada archivo con una línea "===== PARCHEANDO:
+        // CHAPTER1 =====". Contarlas convierte la fase más larga de la
+        // instalación en un avance real, en vez de una barra indeterminada
+        // parada un minuto haciendo creer que se ha colgado.
+        int hechos = 0;
+        var (codigo, salida) = await EjecutarAsync(parcheador, argumentos, ct, linea =>
+        {
+            if (!linea.StartsWith("=====", StringComparison.Ordinal))
+                return;
+
+            hechos++;
+            // La línea anuncia que ese archivo EMPIEZA, así que el avance
+            // corresponde a los anteriores. Contarlo como terminado dejaría la
+            // barra al 100 % mientras aún queda el último capítulo, que es el
+            // más lento de todos.
+            double fraccion = Math.Min(1.0, (double)(hechos - 1) / ArchivosAParchear);
+            Reportar($"Aplicando el parche ({Math.Min(hechos, ArchivosAParchear)} de {ArchivosAParchear})...",
+                     InicioParcheo + (100 - InicioParcheo) * fraccion);
+        });
         SalidaParcheador = salida;
 
         if (codigo == 0)
@@ -203,7 +252,8 @@ public sealed class Instalador
     /// redirigen y no se leen, el hijo se bloquea en cuanto llena la tubería.
     /// </summary>
     private static async Task<(int Codigo, string Salida)> EjecutarAsync(
-        string programa, IEnumerable<string> argumentos, CancellationToken ct)
+        string programa, IEnumerable<string> argumentos, CancellationToken ct,
+        Action<string> porCadaLinea = null)
     {
         var inicio = new ProcessStartInfo
         {
@@ -219,11 +269,25 @@ public sealed class Instalador
         using var proceso = Process.Start(inicio)
             ?? throw new IOException($"No se pudo iniciar \"{Path.GetFileName(programa)}\".");
 
-        Task<string> estandar = proceso.StandardOutput.ReadToEndAsync(ct);
-        Task<string> errores = proceso.StandardError.ReadToEndAsync(ct);
-        await proceso.WaitForExitAsync(ct);
+        var acumulada = new System.Text.StringBuilder();
 
-        return (proceso.ExitCode, (await estandar) + (await errores));
+        async Task LeerAsync(StreamReader lector)
+        {
+            string linea;
+            while ((linea = await lector.ReadLineAsync(ct)) != null)
+            {
+                lock (acumulada)
+                    acumulada.AppendLine(linea);
+                porCadaLinea?.Invoke(linea);
+            }
+        }
+
+        Task estandar = LeerAsync(proceso.StandardOutput);
+        Task errores = LeerAsync(proceso.StandardError);
+        await proceso.WaitForExitAsync(ct);
+        await Task.WhenAll(estandar, errores);
+
+        return (proceso.ExitCode, acumulada.ToString());
     }
 
     /// <summary>
