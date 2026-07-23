@@ -1,0 +1,5 @@
+#!/bin/sh
+# Punto de entrada del AppImage. El runtime monta el AppDir en una ruta
+# temporal y ejecuta este script, así que todo se resuelve relativo a él.
+HERE="$(dirname "$(readlink -f "$0")")"
+exec "$HERE/usr/bin/InstaladorLetraDelta" "$@"

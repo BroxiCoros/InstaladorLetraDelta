@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Instalador LetraDelta
+Comment=Instala la traducción al español americano de DELTARUNE
+Exec=InstaladorLetraDelta
+Icon=letradelta
+Categories=Game;
+Terminal=false
