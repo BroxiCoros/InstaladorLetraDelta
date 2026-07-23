@@ -12,13 +12,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+# Cada plataforma se compila por su cuenta y un tercer job publica las dos
+# juntas. Así una sola etiqueta produce una única Release con el .exe y el
+# AppImage, en vez de dos publicaciones separadas que se pisarían.
 jobs:
-  build-and-publish:
+
+  # ---------------------------------------------------------------------
+  # Windows: instalador de Inno Setup
+  # ---------------------------------------------------------------------
+  build-windows:
     runs-on: windows-latest
-    permissions:
-      contents: write
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Clonado del repositorio
@@ -107,82 +110,17 @@ jobs:
             throw "El instalador no se generó en Output/InstaladorLetraDelta.exe"
           }
 
-      - name: Extraer descripción de la etiqueta desde el registro de cambios (si existe)
-        id: changelog
-        shell: pwsh
-        env:
-          VERSION_TAG: ${{ github.ref_name }}
-        run: |
-          $version = $env:VERSION_TAG -replace '^v',''
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-          # Si existe CHANGELOG.md con una entrada para esta versión, usarla
-          # Si no, dejar las notas de la versión en blanco (GitHub las puede generar luego)
-          if (Test-Path "CHANGELOG.md") {
-            Get-Content "CHANGELOG.md" -Raw | Out-File changelog.md
-          } else {
-            "Versión $env:VERSION_TAG del instalador de LetraDelta." | Out-File changelog.md
-          }
-
-      - name: Publicar la versión etiquetada (vX.Y.Z)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        env:
-          VERSION_TAG: ${{ github.ref_name }}
-        run: |
-          gh release create $env:VERSION_TAG `
-            --title "Versión ${{ steps.changelog.outputs.version }}" `
-            --notes-file changelog.md `
-            --latest `
-            "Output/InstaladorLetraDelta.exe"
-
-      - name: Mover la etiqueta 'latest' al commit actual
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git tag -f latest
-          git push -f origin latest
-
-      - name: Actualizar la publicación 'latest' (URL de descarga estable)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        env:
-          VERSION_TAG: ${{ github.ref_name }}
-        run: |
-          $notes = @"
-          Contiene siempre el ``InstaladorLetraDelta.exe`` de la versión más reciente.
-
-          **Versión actual:** [``$env:VERSION_TAG``](https://github.com/${{ github.repository }}/releases/tag/$env:VERSION_TAG)
-
-          El changelog de cada versión está en su Release correspondiente.
-          "@
-
-          $exists = (gh release view latest 2>$null)
-          if ($LASTEXITCODE -eq 0) {
-            gh release edit latest --notes $notes
-            gh release upload latest "Output/InstaladorLetraDelta.exe" --clobber
-          } else {
-            gh release create latest `
-              --title "Latest" `
-              --notes $notes `
-              --latest=false `
-              "Output/InstaladorLetraDelta.exe"
-          }
-
-      - name: Subir el .exe como artefacto (siempre, incluso en ejecución manual)
-        if: always()
+      - name: Subir el .exe como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: InstaladorLetraDelta
+          name: instalador-windows
           path: Output/InstaladorLetraDelta.exe
-          if-no-files-found: warn
+          if-no-files-found: error
 
-  # Instalador de Linux: AppImage con el asistente gráfico y el parcheador
-  # dentro. De momento solo publica el artefacto; la subida a la release se
-  # unificará con la de Windows cuando el asistente esté terminado.
-  build-appimage-linux:
+  # ---------------------------------------------------------------------
+  # Linux: AppImage con el asistente gráfico y el parcheador dentro
+  # ---------------------------------------------------------------------
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -209,7 +147,7 @@ jobs:
 
       - name: Comprobar que el AppImage arranca
         # Sin escritorio no se puede abrir la ventana, pero sí verificar que el
-        # runtime monta el AppDir y que el parcheador viaja dentro y responde.
+        # runtime monta el AppDir y que los binarios que viajan dentro responden.
         run: |
           ./Output/InstaladorLetraDelta-x86_64.AppImage --appimage-extract > /dev/null
           test -x squashfs-root/usr/bin/InstaladorLetraDelta
@@ -220,9 +158,100 @@ jobs:
           rm -rf squashfs-root
 
       - name: Subir el AppImage como artefacto
-        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: InstaladorLetraDelta-AppImage
+          name: instalador-linux
           path: Output/InstaladorLetraDelta-x86_64.AppImage
-          if-no-files-found: warn
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # Publicación conjunta (solo al etiquetar)
+  # ---------------------------------------------------------------------
+  publish:
+    needs: [build-windows, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION_TAG: ${{ github.ref_name }}
+
+    steps:
+      - name: Clonado del repositorio
+        uses: actions/checkout@v4
+
+      - name: Descargar los artefactos de ambas plataformas
+        uses: actions/download-artifact@v4
+        with:
+          path: artefactos
+
+      - name: Reunir los archivos y calcular las sumas de verificación
+        # En Linux no hay firma de código, así que se publica un SHA256SUMS
+        # para que quien descargue pueda comprobar el archivo.
+        run: |
+          mkdir -p Output
+          mv artefactos/instalador-windows/InstaladorLetraDelta.exe Output/
+          mv artefactos/instalador-linux/InstaladorLetraDelta-x86_64.AppImage Output/
+          cd Output
+          sha256sum InstaladorLetraDelta.exe InstaladorLetraDelta-x86_64.AppImage > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Preparar las notas de la versión
+        id: notas
+        run: |
+          version="${VERSION_TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if [ -f CHANGELOG.md ]; then
+            cp CHANGELOG.md changelog.md
+          else
+            echo "Versión $VERSION_TAG del instalador de LetraDelta." > changelog.md
+          fi
+
+      - name: Publicar la versión etiquetada (vX.Y.Z)
+        run: |
+          gh release create "$VERSION_TAG" \
+            --title "Versión ${{ steps.notas.outputs.version }}" \
+            --notes-file changelog.md \
+            --latest \
+            Output/InstaladorLetraDelta.exe \
+            Output/InstaladorLetraDelta-x86_64.AppImage \
+            Output/SHA256SUMS
+
+      - name: Mover la etiqueta 'latest' al commit actual
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git tag -f latest
+          git push -f origin latest
+
+      - name: Actualizar la publicación 'latest' (URL de descarga estable)
+        run: |
+          notas=$(cat <<EOF
+          Contiene siempre los instaladores de la versión más reciente.
+
+          - **Windows:** \`InstaladorLetraDelta.exe\`
+          - **Linux:** \`InstaladorLetraDelta-x86_64.AppImage\`
+
+          **Versión actual:** [\`$VERSION_TAG\`](https://github.com/${{ github.repository }}/releases/tag/$VERSION_TAG)
+
+          El changelog de cada versión está en su Release correspondiente.
+          EOF
+          )
+
+          if gh release view latest >/dev/null 2>&1; then
+            gh release edit latest --notes "$notas"
+            gh release upload latest \
+              Output/InstaladorLetraDelta.exe \
+              Output/InstaladorLetraDelta-x86_64.AppImage \
+              Output/SHA256SUMS --clobber
+          else
+            gh release create latest \
+              --title "Latest" \
+              --notes "$notas" \
+              --latest=false \
+              Output/InstaladorLetraDelta.exe \
+              Output/InstaladorLetraDelta-x86_64.AppImage \
+              Output/SHA256SUMS
+          fi
