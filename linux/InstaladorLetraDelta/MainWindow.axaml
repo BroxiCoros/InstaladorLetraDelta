@@ -2,39 +2,79 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="InstaladorLetraDelta.MainWindow"
         Title="Instalador LetraDelta"
-        Width="620" Height="560"
+        Width="640" Height="520"
         CanResize="False"
         WindowStartupLocation="CenterScreen">
 
   <DockPanel Margin="28">
 
-    <StackPanel DockPanel.Dock="Top" Spacing="6">
-      <TextBlock Text="LetraDelta" FontSize="30" FontWeight="SemiBold" />
-      <TextBlock Text="Traducción al español americano de DELTARUNE"
-                 FontSize="15" Opacity="0.75" />
-      <TextBlock x:Name="VersionText" FontSize="12" Opacity="0.55" Margin="0,4,0,0" />
+    <!-- Cabecera común a todas las páginas -->
+    <StackPanel DockPanel.Dock="Top" Spacing="4">
+      <TextBlock x:Name="TituloPagina" FontSize="22" FontWeight="SemiBold" />
+      <TextBlock x:Name="SubtituloPagina" FontSize="13" Opacity="0.7" TextWrapping="Wrap" />
+      <Separator Margin="0,12,0,0" />
     </StackPanel>
 
+    <!-- Botonera -->
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
-                HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
-      <Button x:Name="ExitButton" Content="Salir" Width="110" Click="OnExitClick" />
-      <Button x:Name="NextButton" Content="Siguiente" Width="110"
-              IsEnabled="False"
-              IsDefault="True"
-              ToolTip.Tip="El asistente de instalación llega en el siguiente paso." />
+                HorizontalAlignment="Right" Spacing="10" Margin="0,18,0,0">
+      <Button x:Name="BotonCancelar" Content="Cancelar" Width="110" Click="AlCancelar" />
+      <Button x:Name="BotonAtras" Content="Atrás" Width="110" Click="AlAtras" />
+      <Button x:Name="BotonSiguiente" Content="Siguiente" Width="110"
+              IsDefault="True" Click="AlSiguiente" />
     </StackPanel>
 
-    <Border Margin="0,24,0,0" CornerRadius="6" Padding="18"
-            BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-      <StackPanel Spacing="12">
-        <TextBlock Text="Comprobación del empaquetado" FontWeight="SemiBold" />
-        <TextBlock Text="Esta ventana es el esqueleto del instalador. Sirve para verificar que el AppImage arranca y encuentra sus archivos antes de construir el asistente encima."
-                   TextWrapping="Wrap" Opacity="0.75" FontSize="13" />
-        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260">
-          <StackPanel x:Name="DiagnosticsPanel" Spacing="6" Margin="0,4,0,0" />
-        </ScrollViewer>
-      </StackPanel>
-    </Border>
+    <Panel Margin="0,18,0,0">
 
+      <!-- 1. Bienvenida -->
+      <StackPanel x:Name="PaginaBienvenida" Spacing="10">
+        <TextBlock Text="Este asistente instalará la traducción al español americano de DELTARUNE."
+                   TextWrapping="Wrap" />
+        <TextBlock Text="La instalación incluye:" Margin="0,6,0,0" />
+        <StackPanel Margin="12,0,0,0" Spacing="3">
+          <TextBlock Text="• Mod de «Deltranslate»" />
+          <TextBlock Text="• Traducción completa de los capítulos 1 a 5" />
+          <TextBlock Text="• El inglés original, para poder alternar desde el menú del juego" />
+        </StackPanel>
+        <TextBlock Text="La traducción se aplicará sobre tu instalación actual del juego. Las partidas guardadas no se verán afectadas."
+                   TextWrapping="Wrap" Margin="0,6,0,0" />
+        <TextBlock Text="En Linux el juego funciona con Proton, pero los archivos del juego son los mismos que en Windows y el parche se aplica igual."
+                   TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,6,0,0" />
+      </StackPanel>
+
+      <!-- 2. Opciones -->
+      <StackPanel x:Name="PaginaOpciones" Spacing="6" IsVisible="False">
+        <CheckBox x:Name="CasillaBordes" Content="Instalar versión con bordes (NXRUNE)" />
+        <TextBlock Text="Añade los bordes decorativos de las versiones de consola. Variante visual basada en NXRUNE."
+                   TextWrapping="Wrap" Margin="26,0,0,0" Opacity="0.7" FontSize="12" />
+      </StackPanel>
+
+      <!-- 3. Carpeta del juego -->
+      <StackPanel x:Name="PaginaCarpeta" Spacing="10" IsVisible="False">
+        <TextBlock Text="Selecciona la carpeta que contiene «DELTARUNE.exe» y las carpetas «chapter1_windows» … «chapter5_windows»."
+                   TextWrapping="Wrap" />
+        <DockPanel Margin="0,6,0,0">
+          <Button DockPanel.Dock="Right" Content="Examinar…" Width="110" Margin="8,0,0,0"
+                  Click="AlExaminar" />
+          <TextBox x:Name="CampoCarpeta" TextChanged="AlCambiarCarpeta" />
+        </DockPanel>
+        <TextBlock x:Name="AvisoCarpeta" TextWrapping="Wrap" FontSize="12" />
+      </StackPanel>
+
+      <!-- 4. Progreso y resultado -->
+      <StackPanel x:Name="PaginaProgreso" Spacing="12" IsVisible="False">
+        <TextBlock x:Name="TextoProgreso" TextWrapping="Wrap" />
+        <ProgressBar x:Name="BarraProgreso" Height="6" Minimum="0" Maximum="100" />
+        <Border x:Name="CajaDetalle" IsVisible="False" CornerRadius="4" Padding="10"
+                BorderThickness="1" MaxHeight="240"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <SelectableTextBlock x:Name="TextoDetalle" FontFamily="monospace" FontSize="11"
+                                 TextWrapping="Wrap" />
+          </ScrollViewer>
+        </Border>
+      </StackPanel>
+
+    </Panel>
   </DockPanel>
 </Window>
