@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="InstaladorLetraDelta.MainWindow"
+        Title="Instalador LetraDelta"
+        Width="620" Height="460"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen">
+
+  <DockPanel Margin="28">
+
+    <StackPanel DockPanel.Dock="Top" Spacing="6">
+      <TextBlock Text="LetraDelta" FontSize="30" FontWeight="SemiBold" />
+      <TextBlock Text="Traducción al español americano de DELTARUNE"
+                 FontSize="15" Opacity="0.75" />
+      <TextBlock x:Name="VersionText" FontSize="12" Opacity="0.55" Margin="0,4,0,0" />
+    </StackPanel>
+
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+      <Button x:Name="ExitButton" Content="Salir" Width="110" Click="OnExitClick" />
+      <Button x:Name="NextButton" Content="Siguiente" Width="110"
+              IsEnabled="False"
+              IsDefault="True"
+              ToolTip.Tip="El asistente de instalación llega en el siguiente paso." />
+    </StackPanel>
+
+    <Border Margin="0,24,0,0" CornerRadius="6" Padding="18"
+            BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Comprobación del empaquetado" FontWeight="SemiBold" />
+        <TextBlock Text="Esta ventana es el esqueleto del instalador. Sirve para verificar que el AppImage arranca y encuentra sus archivos antes de construir el asistente encima."
+                   TextWrapping="Wrap" Opacity="0.75" FontSize="13" />
+        <StackPanel x:Name="DiagnosticsPanel" Spacing="6" Margin="0,4,0,0" />
+      </StackPanel>
+    </Border>
+
+  </DockPanel>
+</Window>

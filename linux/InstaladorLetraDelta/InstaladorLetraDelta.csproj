@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- WinExe también en Linux: evita que se abra una terminal detrás de la
+         ventana cuando se lanza con doble clic desde el escritorio. -->
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>InstaladorLetraDelta</AssemblyName>
+    <RootNamespace>InstaladorLetraDelta</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+
+    <!-- El AppImage se monta en solo lectura y trae dentro su propio runtime,
+         así que se publica autocontenido pero sin archivo único: dentro del
+         AppDir no aporta nada y complica la depuración. -->
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>embedded</DebugType>
+
+    <NeutralLanguage>es</NeutralLanguage>
+    <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Se mantiene alineada con AppVersion de setup.iss. -->
+    <Version>1.1.0</Version>
+    <Product>Instalador LetraDelta</Product>
+    <CompanyName>BroxiCoros</CompanyName>
+    <Copyright>Copyright 2026 BroxiCoros</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+  </ItemGroup>
+</Project>
