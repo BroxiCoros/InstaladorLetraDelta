@@ -11,7 +11,7 @@ namespace DeltaPatcherCLI {
         public const string ReadonlyWarning1    = "Advertencia: no se pudo comprobar (o quitar) el atributo «Solo lectura» del archivo";
         public const string ScriptError1        = "Error del script:";
         public const string Usage1              = "Uso:";
-        public const string Usage2              = "DeltaPatcherCLI.exe --game \"ruta_al_juego\" --scripts \"ruta_a_scripts\"";
+        public const string Usage2              = "DeltaPatcherCLI --game \"ruta_al_juego\" --scripts \"ruta_a_scripts\"";
         public const string Usage3              = "Ejemplo:";
         public const string ValidatePath1       = "Comprobando rutas...";
         public const string Version1            = "Versión {0}";

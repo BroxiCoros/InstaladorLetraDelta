@@ -161,13 +161,22 @@ namespace DeltaPatcherCLI
             return (MessageBoxResult)MessageBoxA(IntPtr.Zero, text, caption, ((uint)buttons) | ((uint)icon));
         }
 
+        // Fuera de Windows no hay MessageBox (user32.dll no existe), así que
+        // estos avisos caen a la consola. Los rótulos estaban en ruso, heredados
+        // del proyecto original; ahora van en español como el resto del CLI.
         public static void ShowMessage(string message)
         {
-            ShowMessageBox(message, "Сообщение", MessageBoxButtons.Ok, MessageBoxIcon.Information);
+            if (OperatingSystem.IsWindows())
+                ShowMessageBox(message, "Mensaje", MessageBoxButtons.Ok, MessageBoxIcon.Information);
+            else
+                Program.WriteLine(message);
         }
         public static void ShowWarning(string message)
         {
-            ShowMessageBox(message, "Предупреждение", MessageBoxButtons.Ok, MessageBoxIcon.Warning);
+            if (OperatingSystem.IsWindows())
+                ShowMessageBox(message, "Advertencia", MessageBoxButtons.Ok, MessageBoxIcon.Warning);
+            else
+                Program.WriteLine($"[{LocalizedText.Warning1}] {message}");
         }
     }
 }

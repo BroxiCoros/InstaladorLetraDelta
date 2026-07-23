@@ -56,7 +56,9 @@ class Program
                 WriteLine(LocalizedText.Usage2);
                 WriteLine();
                 WriteLine(LocalizedText.Usage3);
-                WriteLine("DeltarunePatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\"");
+                WriteLine(OperatingSystem.IsWindows()
+                    ? "DeltaPatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\""
+                    : "./DeltaPatcherCLI --game ~/.local/share/Steam/steamapps/common/DELTARUNE --scripts /tmp/scripts");
                 Environment.Exit(0);
             }
 
@@ -91,11 +93,11 @@ class Program
                 string[] chapterNames  = { "Chapter1", "Chapter2", "Chapter3", "Chapter4", "Chapter5" };
                 string[] chapterDataWins =
                 {
-                    @"chapter1_windows\data.win",
-                    @"chapter2_windows\data.win",
-                    @"chapter3_windows\data.win",
-                    @"chapter4_windows\data.win",
-                    @"chapter5_windows\data.win",
+                    Path.Combine("chapter1_windows", "data.win"),
+                    Path.Combine("chapter2_windows", "data.win"),
+                    Path.Combine("chapter3_windows", "data.win"),
+                    Path.Combine("chapter4_windows", "data.win"),
+                    Path.Combine("chapter5_windows", "data.win"),
                 };
                 for (int ci = 0; ci < chapterNames.Length; ci++)
                 {
@@ -111,36 +113,44 @@ class Program
                 }
             } else {
                  Apk.ExtractEmbeddedJar("apktool.jar");
-                 if (!Directory.Exists(gamePath + @"\translated")) {
-                     Directory.CreateDirectory(gamePath + @"\translated");
+                 string jarPath = Path.Combine(Path.GetTempPath(), "apktool.jar");
+                 string translatedDir = Path.Combine(gamePath, "translated");
+                 if (!Directory.Exists(translatedDir)) {
+                     Directory.CreateDirectory(translatedDir);
                  }
                  FileInfo[] files = new DirectoryInfo(gamePath).GetFiles("*.apk");
                  foreach (FileInfo file in files) {
-                     Apk.RunCommand("java", "-jar " + Path.GetTempPath() + $"apktool.jar d -r \"{file.FullName}\" -o \"{gamePath + @"\" + file.Name.Replace(".apk", "")}\" -f");
+                     // Carpeta donde apktool descomprime el APK, y ruta relativa
+                     // (respecto a gamePath) del game.droid que hay dentro.
+                     string apkBaseName = Path.GetFileNameWithoutExtension(file.Name);
+                     string apkDir      = Path.Combine(gamePath, apkBaseName);
+                     string dataDroid   = Path.Combine(apkBaseName, "assets", "game.droid");
+
+                     Apk.RunCommand("java", $"-jar \"{jarPath}\" d -r \"{file.FullName}\" -o \"{apkDir}\" -f");
                      switch (file.Name) {
                          case "selector.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Menu", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Menu", dataDroid);
                              break;
                          case "chapter1_windows.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter1", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter1", dataDroid);
                              break;
                          case "chapter2_windows.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter2", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter2", dataDroid);
                              break;
                          case "chapter3_windows.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter3", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter3", dataDroid);
                              break;
                          case "chapter4_windows.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter4", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter4", dataDroid);
                              break;
                          case "chapter5_windows.apk":
-                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter5", file.Name.Replace(".apk", "") + @"\assets\game.droid");
+                             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter5", dataDroid);
                              break;
                      }
 
-                     Apk.RunCommand("java", "-jar " + Path.GetTempPath() + $"apktool.jar b \"{gamePath + @"\" + file.Name.Replace(".apk", "")}\" -o \"{gamePath + @"\translated\" + file.Name}\"");
-        
-                     new DirectoryInfo(gamePath + @"\" + file.Name.Replace(".apk", "")).Delete(true);
+                     Apk.RunCommand("java", $"-jar \"{jarPath}\" b \"{apkDir}\" -o \"{Path.Combine(translatedDir, file.Name)}\"");
+
+                     new DirectoryInfo(apkDir).Delete(true);
                  }
             }
 

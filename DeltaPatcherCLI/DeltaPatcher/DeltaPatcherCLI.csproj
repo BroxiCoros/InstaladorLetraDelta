@@ -4,11 +4,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- RID objetivo. La compilación es multiplataforma: el instalador de
+         Windows publica con -r win-x64 y el de Linux con -r linux-x64. Si no
+         se indica ninguno (compilación local de desarrollo), se toma el del
+         sistema anfitrión. -->
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' == 'Windows_NT'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' != 'Windows_NT'">linux-x64</RuntimeIdentifier>
+    <IsWindowsBuild>$(RuntimeIdentifier.StartsWith('win'))</IsWindowsBuild>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <PublishTrimmed>true</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <DebugType>embedded</DebugType>
@@ -17,6 +22,23 @@
     <NeutralLanguage>es</NeutralLanguage>
     <ResourceLanguages>es</ResourceLanguages>
     <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- Ajustes exclusivos de Windows: el manifiesto de UAC/DPI no existe fuera
+       de Windows, y el recorte (trimming) está validado solo en esa
+       plataforma. Mantenerlos aquí deja el artefacto de Windows byte a byte
+       equivalente al de antes del porte. -->
+  <PropertyGroup Condition="'$(IsWindowsBuild)' == 'true'">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <!-- En Linux se publica sin recortar. El recorte es un análisis estático y
+       no puede ver los tipos que los .csx (compilados por Roslyn en tiempo de
+       ejecución) usan, así que un recorte mal calibrado rompe el parcheo a
+       mitad de capítulo. Se activará cuando el flujo esté validado. -->
+  <PropertyGroup Condition="'$(IsWindowsBuild)' != 'true'">
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -51,9 +73,11 @@
     <EmbeddedResource Include="apktool.jar" />
   </ItemGroup>
 
+  <!-- UndertaleModLib genera un .xml de documentación que no aporta nada al
+       publicado. Se borra con la tarea Delete de MSBuild (antes era un `del`
+       de cmd, que solo funcionaba en Windows). -->
   <Target Name="DeleteXML" AfterTargets="AfterPublish">
-    <Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
-    <Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
+    <Delete Files="$(PublishDir)UndertaleModLib.xml" ContinueOnError="true" />
   </Target>
 
   <PropertyGroup>

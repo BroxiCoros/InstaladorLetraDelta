@@ -27,6 +27,11 @@ namespace DeltaPatcherCLI
 
         public static bool SwitchQuickMode(bool enable)
         {
+            // "Quick Edit" es una particularidad de la consola de Windows: al
+            // hacer clic en la ventana se pausa el proceso. Fuera de Windows no
+            // existe (y las P/Invoke a kernel32 lanzarían DllNotFoundException).
+            if (!OperatingSystem.IsWindows())
+                return false;
 
             IntPtr consoleHandle = GetStdHandle(STD_INPUT_HANDLE);
 
