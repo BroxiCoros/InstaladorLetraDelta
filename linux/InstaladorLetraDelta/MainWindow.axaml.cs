@@ -44,6 +44,30 @@ public partial class MainWindow : Window
             haySevenZip,
             haySevenZip ? $"Descompresor encontrado: {SevenZipName}"
                         : $"No se encontró {SevenZipName} junto al instalador"));
+
+        // Detección de Steam. Se muestra aquí de momento para poder verificarla;
+        // en el asistente pasará a rellenar la página de selección de carpeta.
+        var bibliotecas = Steam.Bibliotecas().ToList();
+        panel.Children.Add(Linea(
+            bibliotecas.Count > 0,
+            bibliotecas.Count > 0
+                ? $"Bibliotecas de Steam: {bibliotecas.Count} ({string.Join(", ", bibliotecas)})"
+                : "No se encontró ninguna biblioteca de Steam"));
+
+        var juego = Steam.Detectar();
+        panel.Children.Add(Linea(
+            juego != null,
+            juego != null ? $"DELTARUNE: {juego.CarpetaJuego}"
+                          : "No se encontró DELTARUNE (habrá que indicar la carpeta a mano)"));
+
+        if (juego != null)
+        {
+            bool hayPrefijo = juego.PrefijoProton != null;
+            panel.Children.Add(Linea(
+                hayPrefijo,
+                hayPrefijo ? $"Prefijo de Proton: {juego.PrefijoProton}"
+                           : "Sin prefijo de Proton (el juego nunca se ha ejecutado)"));
+        }
     }
 
     // Una línea de resultado con su marca de correcto/pendiente delante.
