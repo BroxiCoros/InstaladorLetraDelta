@@ -518,15 +518,23 @@ end;
 // Establece "es_mx" como idioma por defecto en true_config.ini si la
 // clave LANG_DT aún no existe. Si el usuario ya jugó con el mod y
 // eligió otro idioma, lo respetamos. Esto solo cubre primer install
-// (true_config.ini sin sección [LANG]) o instalaciones limpias.
+// (true_config.ini sin sección [LANG]). Si la carpeta del juego todavía no
+// existe, no se hace nada: ver el comentario de dentro.
 procedure SetSpanishAsDefaultIfUnset;
 var
   IniPath, IniDir, Existing: String;
 begin
   IniPath := ExpandConstant('{localappdata}\DELTARUNE\true_config.ini');
   IniDir := ExtractFilePath(IniPath);
+
+  // NUNCA se crea la carpeta. Steam la borra entera al desinstalar el juego y
+  // usa esa ausencia como señal para restaurar las partidas desde la nube en
+  // el siguiente arranque. Si el instalador la recrea con un true_config.ini
+  // dentro, Steam ve contenido local, da por hecho que las partidas ya están y
+  // no descarga nada: el jugador se queda sin ellas. Es preferible no fijar el
+  // idioma (se elige desde el menú del juego) antes que provocar eso.
   if not DirExists(IniDir) then
-    ForceDirectories(IniDir);
+    Exit;
 
   Existing := GetIniString('LANG', 'LANG_DT', '', IniPath);
   if Existing = '' then
