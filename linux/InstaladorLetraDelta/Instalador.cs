@@ -40,6 +40,9 @@ public sealed class Instalador
     /// <summary>Salida completa del parcheador, para mostrarla si algo falla.</summary>
     public string SalidaParcheador { get; private set; } = "";
 
+    /// <summary>Qué pasó con el idioma por defecto del mod.</summary>
+    public ResultadoIdioma Idioma { get; private set; } = ResultadoIdioma.SinPrefijo;
+
     /// <summary>
     /// Ejecuta la instalación completa. Devuelve null si todo fue bien, o el
     /// mensaje de error si algo falló.
@@ -71,7 +74,12 @@ public sealed class Instalador
             await DescomprimirAsync(scripts, carpetaScripts, ct);
 
             _avance.Report(new Avance("Aplicando el parche...", null));
-            return await ParchearAsync(carpetaJuego, carpetaScripts, conBordes, temporal, ct);
+            string error = await ParchearAsync(carpetaJuego, carpetaScripts, conBordes, temporal, ct);
+            if (error != null)
+                return error;
+
+            Idioma = FijarIdiomaPorDefecto(carpetaJuego);
+            return null;
         }
         catch (OperationCanceledException)
         {
@@ -216,6 +224,34 @@ public sealed class Instalador
         await proceso.WaitForExitAsync(ct);
 
         return (proceso.ExitCode, (await estandar) + (await errores));
+    }
+
+    /// <summary>
+    /// Deja el español como idioma por defecto del mod, dentro del prefijo de
+    /// Proton del juego. Es lo mismo que hace el instalador de Windows sobre
+    /// %LOCALAPPDATA%, pero aquí hay que entrar en el prefijo correcto: si se
+    /// escribiera en el del propio instalador, el juego no lo vería nunca.
+    /// Nunca es motivo de error: si no se puede, el idioma se elige desde el
+    /// menú del juego y ya está.
+    /// </summary>
+    private static ResultadoIdioma FijarIdiomaPorDefecto(string carpetaJuego)
+    {
+        try
+        {
+            string biblioteca = Steam.BibliotecaDeJuego(carpetaJuego);
+            if (biblioteca is null)
+                return ResultadoIdioma.SinPrefijo;
+
+            string prefijo = Steam.BuscarPrefijoProton(biblioteca);
+            if (prefijo is null)
+                return ResultadoIdioma.SinPrefijo;
+
+            return Configuracion.FijarIdiomaSiNoHay(Steam.RutaConfig(prefijo));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return ResultadoIdioma.SinPrefijo;
+        }
     }
 
     /// <summary>

@@ -144,6 +144,26 @@ public static class Steam
     }
 
     /// <summary>
+    /// Deduce la biblioteca a partir de la carpeta del juego, que en una
+    /// instalación de Steam siempre cuelga de `steamapps/common/`. Hace falta
+    /// cuando el usuario indica la carpeta a mano y no hemos llegado a ella por
+    /// la detección: sin la biblioteca no se puede localizar el prefijo.
+    /// Devuelve null si la carpeta no tiene esa forma.
+    /// </summary>
+    public static string BibliotecaDeJuego(string carpetaJuego)
+    {
+        var comun = Directory.GetParent(carpetaJuego?.TrimEnd(Path.DirectorySeparatorChar) ?? "");
+        if (comun is null || !comun.Name.Equals("common", StringComparison.Ordinal))
+            return null;
+
+        var steamapps = comun.Parent;
+        if (steamapps is null || !steamapps.Name.Equals("steamapps", StringComparison.Ordinal))
+            return null;
+
+        return steamapps.Parent?.FullName;
+    }
+
+    /// <summary>
     /// Ruta del true_config.ini dentro de un prefijo de Proton. Es el
     /// equivalente de %LOCALAPPDATA%\DELTARUNE\true_config.ini en Windows.
     /// </summary>

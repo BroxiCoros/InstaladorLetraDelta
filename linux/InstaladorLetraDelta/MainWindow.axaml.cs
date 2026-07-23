@@ -212,8 +212,16 @@ public partial class MainWindow : Window
 
         if (_instalacionCorrecta)
         {
+            string idioma = instalador.Idioma switch
+            {
+                ResultadoIdioma.Fijado => "El español queda como idioma predeterminado.",
+                ResultadoIdioma.YaEstaba => "Se ha respetado el idioma que ya tenías elegido.",
+                _ => "No se pudo fijar el idioma automáticamente porque el juego todavía no se ha " +
+                     "ejecutado nunca. Puedes elegirlo desde el menú del juego.",
+            };
+
             texto.Text = "La traducción al español se ha instalado correctamente.\n\n" +
-                         "Si nunca habías configurado un idioma dentro del mod, queda fijado el español.\n\n" +
+                         idioma + "\n\n" +
                          "Para revertirla, usa «Verificar integridad de los archivos» en Steam.";
         }
         else
