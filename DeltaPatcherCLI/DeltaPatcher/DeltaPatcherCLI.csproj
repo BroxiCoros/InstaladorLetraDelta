@@ -58,6 +58,30 @@
     <EmbeddedResource Include="apktool.jar" />
   </ItemGroup>
 
+  <!-- GameSpecificData son las definiciones que Underanalyzer usa para resolver
+       constantes a nombres de asset al decompilar (snd_*, spr_*, c_white...).
+       UndertaleModLib las marca ExcludeFromSingleFile=true, pensadas para vivir
+       sueltas junto al .exe; en un publish single-file eso las deja fuera y
+       GameSpecificResolver (que las busca en AppContext.BaseDirectory) no las
+       encuentra.
+
+       Sin ellas el decompilador emite el id crudo (`107` en vez de
+       `snd_flowery_voicenoise_1`) y los reemplazos por regex de los manifiestos
+       del mod (CodesWithSounds.json, CodesWithSprites.json...) no encuentran el
+       nombre y se saltan EN SILENCIO, dejando un data.win a medio parchear que
+       el patcher reporta como correcto.
+
+       Forzamos ExcludeFromSingleFile=false para que se empaqueten dentro del
+       binario; IncludeAllContentForSelfExtract (arriba) las extrae junto a la
+       app al arrancar, que es justo donde el resolver mira. -->
+  <Target Name="EmbedGameSpecificData" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('GameSpecificData'))"
+                             ExcludeFromSingleFile="false" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="DeleteXML" AfterTargets="AfterPublish">
     <Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
     <Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
