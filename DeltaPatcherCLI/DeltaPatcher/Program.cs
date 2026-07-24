@@ -374,6 +374,17 @@ public class ScriptGlobals
     {
             }
 
+    // Requerido a partir de UndertaleModLib 0.9. El BaseFix.csx del mod mira la
+    // version de la lib: con 0.8 marshala las escrituras con un DummyAction que
+    // ejecuta en el sitio, pero con 0.9+ las busca por reflexion en una propiedad
+    // "MainThreadAction" del host (asi es como la expone la GUI de UTMT). Si el
+    // host no la tiene, el script se queda con un Action<Action> nulo y revienta
+    // con NullReferenceException en el primer AddNewEvent, antes de parchear nada.
+    //
+    // En CLI no hay hilo de UI que respetar, asi que ejecutamos la accion
+    // directamente: es justo lo que hace la rama 0.8 del propio script.
+    public Action<Action> MainThreadAction { get; } = static act => act();
+
     public void ScriptMessage(string message, bool dummy = false)
     {
         // Los scripts de deltranslate (AssetInjector, CodeChangesParser,

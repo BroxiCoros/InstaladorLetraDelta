@@ -29,7 +29,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.0.0" />
+    <!-- Debe ir en la misma version que la que arrastra UndertaleModLib, o el
+         restore falla con NU1107 por conflicto en CodeAnalysis.Scripting.Common. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +39,11 @@
     <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
     <TrimmerRootAssembly Include="Underanalyzer" />
     <TrimmerRootAssembly Include="UndertaleModLib" />
+    <!-- Los scripts del mod acceden a ScriptGlobals por reflexion (SyncBinding,
+         MainThreadAction...). Sin enraizar este ensamblado el trimmer borra los
+         miembros que nadie referencia estaticamente y las busquedas devuelven
+         null en silencio. -->
+    <TrimmerRootAssembly Include="DeltaPatcherCLI" />
   </ItemGroup>
 
   <ItemGroup>
