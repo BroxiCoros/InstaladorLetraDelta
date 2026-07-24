@@ -51,7 +51,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.0.0" />
+    <!-- Debe ir en la misma version que la que arrastra UndertaleModLib, o el
+         restore falla con NU1107 por conflicto en CodeAnalysis.Scripting.Common. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,6 +61,11 @@
     <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
     <TrimmerRootAssembly Include="Underanalyzer" />
     <TrimmerRootAssembly Include="UndertaleModLib" />
+    <!-- Los scripts del mod acceden a ScriptGlobals por reflexion (SyncBinding,
+         MainThreadAction...). Sin enraizar este ensamblado el trimmer borra los
+         miembros que nadie referencia estaticamente y las busquedas devuelven
+         null en silencio. -->
+    <TrimmerRootAssembly Include="DeltaPatcherCLI" />
   </ItemGroup>
 
   <ItemGroup>
@@ -72,6 +79,30 @@
     <None Remove="apktool.jar" />
     <EmbeddedResource Include="apktool.jar" />
   </ItemGroup>
+
+  <!-- GameSpecificData son las definiciones que Underanalyzer usa para resolver
+       constantes a nombres de asset al decompilar (snd_*, spr_*, c_white...).
+       UndertaleModLib las marca ExcludeFromSingleFile=true, pensadas para vivir
+       sueltas junto al .exe; en un publish single-file eso las deja fuera y
+       GameSpecificResolver (que las busca en AppContext.BaseDirectory) no las
+       encuentra.
+
+       Sin ellas el decompilador emite el id crudo (`107` en vez de
+       `snd_flowery_voicenoise_1`) y los reemplazos por regex de los manifiestos
+       del mod (CodesWithSounds.json, CodesWithSprites.json...) no encuentran el
+       nombre y se saltan EN SILENCIO, dejando un data.win a medio parchear que
+       el patcher reporta como correcto.
+
+       Forzamos ExcludeFromSingleFile=false para que se empaqueten dentro del
+       binario; IncludeAllContentForSelfExtract (arriba) las extrae junto a la
+       app al arrancar, que es justo donde el resolver mira. -->
+  <Target Name="EmbedGameSpecificData" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('GameSpecificData'))"
+                             ExcludeFromSingleFile="false" />
+    </ItemGroup>
+  </Target>
 
   <!-- UndertaleModLib genera un .xml de documentación que no aporta nada al
        publicado. Se borra con la tarea Delete de MSBuild (antes era un `del`

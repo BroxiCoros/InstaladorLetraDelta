@@ -1,6 +1,6 @@
 [Setup]
 AppName=LetraDelta — Instalador de la traducción de DELTARUNE
-AppVersion=1.1.0
+AppVersion=1.1.1
 AppPublisher=BroxiCoros
 AppPublisherURL=https://github.com/BroxiCoros/LetraDelta
 AppSupportURL=https://discord.gg/ndkjnhXPPr
@@ -611,11 +611,12 @@ begin
       Exit;
     end;
 
-    // El instalador NO toca la configuración del juego. El mod ya arranca en
-    // el idioma del pack instalado, y escribir en la carpeta de datos tiene un
-    // efecto secundario grave: Steam usa la ausencia de esa carpeta como señal
-    // para restaurar las partidas desde la nube, así que crearla deja al
-    // jugador sin ellas. El idioma se cambia desde el menú del juego.
+    // El instalador NO toca la configuración ni los datos guardados del juego.
+    // El mod ya arranca con el pack de idioma instalado, y escribir en
+    // %LOCALAPPDATA%\DELTARUNE tiene un efecto secundario grave: Steam usa la
+    // ausencia de esa carpeta como señal para restaurar las partidas desde la
+    // nube, así que crearla puede dejar al jugador sin ellas. El idioma se
+    // cambia desde el menú del juego.
   except
     ExceptionMsg := GetExceptionMessage();
     if ExceptionMsg <> 'empty' then
