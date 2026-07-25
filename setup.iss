@@ -124,6 +124,11 @@ var
   ForceClose: Boolean;
   ExistingDrives: TArrayOfString;
 
+  // Carpeta del juego detectada al arrancar el asistente, o vacia si no se
+  // encontro. Se calcula una sola vez: rellena el campo de la pagina de
+  // carpeta y decide si hay que avisar al usuario de que la indique a mano.
+  DetectedGameLoc: String;
+
   // Casillas de la pagina de opciones (OptionsPage). Se crean en
   // InitializeWizard y se leen al pulsar Siguiente desde esa pagina.
   BordersCheckbox: TNewCheckBox;
@@ -160,44 +165,225 @@ begin
     Result := FileExists(AddBackslash(DirPath) + 'chapter5_windows\data.win');
 end;
 
+// ---- Deteccion del juego a traves de Steam ----
+//
+// Steam declara todas sus bibliotecas en `libraryfolders.vdf`, incluidas las
+// de discos secundarios. Sin leer ese archivo, una instalacion en
+// D:\SteamLibrary no se encuentra nunca, que es el caso mas comun despues
+// del predeterminado. La logica es la misma que usa el instalador de Linux
+// (ver linux/InstaladorLetraDelta/Steam.cs).
+
+// Devuelve la cadena entrecomillada numero Index (base 0) de una linea del
+// VDF, o vacio si no hay tantas. Basta con esto para leer el archivo: no
+// hace falta interpretar el formato entero, solo pares clave/valor.
+function VdfToken(const Line: String; Index: Integer): String;
+var
+  i, Start, Found: Integer;
+  Abierta: Boolean;
+begin
+  Result := '';
+  Abierta := False;
+  Found := 0;
+  Start := 1;
+
+  for i := 1 to Length(Line) do
+  begin
+    if Line[i] <> '"' then
+      Continue;
+
+    if not Abierta then
+    begin
+      Abierta := True;
+      Start := i + 1;
+    end
+    else
+    begin
+      Abierta := False;
+      if Found = Index then
+      begin
+        Result := Copy(Line, Start, i - Start);
+        Exit;
+      end;
+      Found := Found + 1;
+    end;
+  end;
+end;
+
+// True si la cadena son solo digitos.
+function IsDigits(const S: String): Boolean;
+var
+  i: Integer;
+begin
+  Result := Length(S) > 0;
+
+  for i := 1 to Length(S) do
+    if (S[i] < '0') or (S[i] > '9') then
+    begin
+      Result := False;
+      Exit;
+    end;
+end;
+
+// Anade una ruta a la lista si existe y no estaba ya. La comprobacion de
+// existencia hace de filtro barato: descarta bibliotecas desconectadas y
+// tambien los valores numericos que el VDF guarda junto a las rutas.
+procedure AddLibrary(var Libraries: TArrayOfString; Path: String);
+var
+  i, Count: Integer;
+begin
+  if Path = '' then
+    Exit;
+
+  // Bajo Proton, el VDF de Steam declara rutas de Linux (/mnt/..., /run/...).
+  // La raiz del sistema se ve como Z:\, y sin ese prefijo quedarian como
+  // rutas relativas a la unidad actual: la microSD de una Steam Deck no se
+  // encontraria nunca.
+  if Path[1] = '/' then
+    Path := 'Z:' + Path;
+
+  // El valor `SteamPath` del registro usa barras normales.
+  StringChangeEx(Path, '/', '\', True);
+  Path := RemoveBackslashUnlessRoot(Path);
+
+  if not DirExists(Path) then
+    Exit;
+
+  Count := GetArrayLength(Libraries);
+  for i := 0 to Count - 1 do
+    if SameText(Libraries[i], Path) then
+      Exit;
+
+  SetArrayLength(Libraries, Count + 1);
+  Libraries[Count] := Path;
+end;
+
+// Saca las rutas de bibliotecas de un libraryfolders.vdf.
+procedure CollectLibrariesFromVdf(const VdfPath: String; var Libraries: TArrayOfString);
+var
+  Raw: AnsiString;
+  Lines: TArrayOfString;
+  i: Integer;
+  Key, Value: String;
+begin
+  if not FileExists(VdfPath) then
+    Exit;
+  if not LoadStringFromFile(VdfPath, Raw) then
+    Exit;
+
+  // El VDF viene en UTF-8: se decodifica para no estropear las rutas que
+  // lleven acentos.
+  Lines := StringSplit(UTF8Decode(Raw), [#10], stAll);
+
+  for i := 0 to GetArrayLength(Lines) - 1 do
+  begin
+    Key := VdfToken(Lines[i], 0);
+    Value := VdfToken(Lines[i], 1);
+
+    // Formato actual: "path"  "D:\\SteamLibrary".
+    // Formato antiguo: "1"  "D:\\SteamLibrary".
+    if SameText(Key, 'path') or IsDigits(Key) then
+    begin
+      StringChangeEx(Value, '\\', '\', True);
+      AddLibrary(Libraries, Value);
+    end;
+  end;
+end;
+
+// Raices donde puede vivir Steam: el registro en Windows, y las rutas
+// habituales de Linux vistas desde Proton, donde Z:\ es la raiz del sistema.
+// Se cubren el Steam nativo y el de Flatpak, y el usuario "deck" ademas del
+// actual.
+function SteamRoots(): TArrayOfString;
+var
+  Roots: TArrayOfString;
+  LinuxRoots: array[0..4] of String;
+  Users: array[0..1] of String;
+  Path: String;
+  i, j: Integer;
+begin
+  SetArrayLength(Roots, 0);
+
+  if RegQueryStringValue(HKCU, 'Software\Valve\Steam', 'SteamPath', Path) then
+    AddLibrary(Roots, Path);
+
+  // Steam es una aplicacion de 32 bits, asi que su clave vive en la vista de
+  // 32 del registro. Se consultan las dos vistas explicitamente porque el
+  // instalador corre en modo 64 y ahi no hay redireccion automatica.
+  if RegQueryStringValue(HKLM32, 'SOFTWARE\Valve\Steam', 'InstallPath', Path) then
+    AddLibrary(Roots, Path);
+  if IsWin64 then
+    if RegQueryStringValue(HKLM64, 'SOFTWARE\Valve\Steam', 'InstallPath', Path) then
+      AddLibrary(Roots, Path);
+
+  LinuxRoots[0] := 'Z:\home\%s\.local\share\Steam';
+  LinuxRoots[1] := 'Z:\home\%s\.steam\steam';
+  LinuxRoots[2] := 'Z:\home\%s\.steam\root';
+  LinuxRoots[3] := 'Z:\home\%s\.var\app\com.valvesoftware.Steam\data\Steam';
+  LinuxRoots[4] := 'Z:\home\%s\.var\app\com.valvesoftware.Steam\.local\share\Steam';
+
+  Users[0] := 'deck'; // usuario predeterminado de Steam Deck
+  Users[1] := GetUserNameString();
+
+  for i := 0 to High(LinuxRoots) do
+    for j := 0 to High(Users) do
+      AddLibrary(Roots, Format(LinuxRoots[i], [Users[j]]));
+
+  Result := Roots;
+end;
+
+// Todas las bibliotecas de Steam: las propias raices mas las que declare
+// cada libraryfolders.vdf.
+function SteamLibraries(): TArrayOfString;
+var
+  Roots, Libraries: TArrayOfString;
+  i: Integer;
+begin
+  SetArrayLength(Libraries, 0);
+  Roots := SteamRoots();
+
+  for i := 0 to GetArrayLength(Roots) - 1 do
+  begin
+    AddLibrary(Libraries, Roots[i]);
+
+    // Desde 2021 el archivo vive en steamapps\; antes estaba en config\.
+    CollectLibrariesFromVdf(AddBackslash(Roots[i]) + 'steamapps\libraryfolders.vdf', Libraries);
+    CollectLibrariesFromVdf(AddBackslash(Roots[i]) + 'config\libraryfolders.vdf', Libraries);
+  end;
+
+  Result := Libraries;
+end;
+
 // Search for the DELTARUNE folder
 function FindGameLocation(): String;
 var
   GameLocations: array[0..3] of String;
-  GameLocationsLinux: array[0..1] of String;
-  DrivePrefix, Location, UserName: String;
+  Libraries: TArrayOfString;
+  DrivePrefix, Location: String;
   i, j: Integer;
 begin
+  // Primero, las bibliotecas que declara el propio Steam.
+  Libraries := SteamLibraries();
+
+  for i := 0 to GetArrayLength(Libraries) - 1 do
+  begin
+    Result := AddBackslash(Libraries[i]) + 'steamapps\common\DELTARUNE\';
+    if CheckDeltaruneLoc(Result) then
+      Exit;
+  end;
+
+  // Respaldo por si el juego no viene de Steam o el registro esta sin
+  // escribir: se prueban las rutas fijas de siempre en cada unidad.
   GameLocations[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\';
   GameLocations[1] := '\Program Files (x86)\DELTARUNE\';
   GameLocations[2] := '\DELTARUNE\';
   GameLocations[3] := '\Program Files\DELTARUNE\';
-  
-  // Steam Deck
-  GameLocationsLinux[0] := 'Z:\home\%s\.local\share\Steam\steamapps\common\DELTARUNE\';
-  GameLocationsLinux[1] := 'Z:\home\%s\.var\app\com.valvesoftware.Steam\.local\share\Steam\steamapps\common\DELTARUNE\';
-  UserName := GetUserNameString();
 
-  for i := 0 to High(GameLocationsLinux) do
-  begin
-    Location := GameLocationsLinux[i];
-    
-    Result := Format(Location, ['deck']); // Default Steam Deck user name
-    if CheckDeltaruneLoc(Result) then
-      Exit;
-    
-    Result := Format(Location, [UserName]);
-    if CheckDeltaruneLoc(Result) then
-      Exit;
-  end;
-  
   Result := '';
-  
-  // Windows PC
+
   for i := 0 to High(ExistingDrives) do
   begin
     DrivePrefix := ExistingDrives[i];
-    
+
     for j := 0 to High(GameLocations) do
     begin
       Location := DrivePrefix + GameLocations[j];
@@ -239,6 +425,10 @@ var
   OffsetY: Integer;
   HelpLabel: TNewStaticText;
 begin
+  // Antes que nada, porque la deteccion del juego se apoya en la lista de
+  // unidades para su busqueda de respaldo.
+  InitExistingDrives;
+
   WizardForm.WelcomeLabel1.Caption := CustomMessage('WelcomeLabel1');
   WizardForm.WelcomeLabel2.Caption := CustomMessage('WelcomeLabel2');
 
@@ -337,20 +527,25 @@ begin
     False, ''
   );
   GamePathPage.Add('');
-  GamePathPage.Values[0] := ExpandConstant('{sd}\Program Files (x86)\Steam\steamapps\common\DELTARUNE');
+
+  // Se rellena con la carpeta detectada para que el usuario no tenga que
+  // buscarla; si no hay ninguna, se deja la ruta habitual como pista.
+  // Sin la barra final: la ruta se pasa entrecomillada al parcheador y una
+  // barra antes de la comilla escaparia la comilla.
+  DetectedGameLoc := FindGameLocation();
+  if DetectedGameLoc <> '' then
+    GamePathPage.Values[0] := RemoveBackslashUnlessRoot(DetectedGameLoc)
+  else
+    GamePathPage.Values[0] := ExpandConstant('{sd}\Program Files (x86)\Steam\steamapps\common\DELTARUNE');
 
   FinishedText := CustomMessage('FinishedText1') + #13#10 +
                   + #13#10 +
                   CustomMessage('FinishedText2');
 
   ProgressPage := CreateOutputProgressPage(CustomMessage('ProgressPage1a'), CustomMessage('ProgressPage1b'));
-
-  InitExistingDrives;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
-var
-  FoundGameLoc: String;
 begin
   Result := True;
 
@@ -359,8 +554,7 @@ begin
     InstallBorders     := BordersCheckbox.Checked;
     PatchDeltaQuick    := DeltaQuickCheckbox.Checked;
 
-    FoundGameLoc := FindGameLocation();
-    if (FoundGameLoc = '') and (not PatchDeltaQuick) then
+    if (DetectedGameLoc = '') and (not PatchDeltaQuick) then
     begin
       MsgBox(CustomMessage('FoundGameLoc1'), mbInformation, MB_OK);
       Exit;
