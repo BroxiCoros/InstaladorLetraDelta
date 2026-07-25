@@ -87,21 +87,30 @@ jobs:
       - name: Asegurar Inno Setup 6
         shell: pwsh
         run: |
+          # La ruta lleva dentro el número de versión mayor, así que hay que
+          # fijar también la versión que instala Chocolatey. Sin fijarla, el
+          # día que la última publicada sea la 7 se instalaría en otra
+          # carpeta y este paso fallaría diciendo que no se instaló, cuando
+          # en realidad sí se instaló pero en otro sitio. La 7 tampoco está
+          # probada con este script: quedan avisos de obsolescencia (el
+          # identificador `x64`, `Extract7ZipArchive`) que un salto de
+          # versión mayor puede haber convertido en errores.
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) {
             Write-Host "ISCC.exe no encontrado, instalando vía choco..."
-            choco install innosetup -y --no-progress
+            choco install innosetup -y --no-progress --version=6.7.1 --allow-downgrade
             if (-not (Test-Path $iscc)) {
-              throw "Inno Setup no se instaló correctamente"
+              throw "Inno Setup 6 no quedó instalado en $iscc"
             }
           }
           Write-Host "Inno Setup listo en $iscc"
+          # Se comparte con el paso de compilación para no repetir la ruta.
+          "ISCC=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Compilar el instalador (setup.iss)
         shell: pwsh
         run: |
-          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          & $iscc setup.iss
+          & "$env:ISCC" setup.iss
           if ($LASTEXITCODE -ne 0) {
             throw "ISCC falló con código $LASTEXITCODE"
           }
