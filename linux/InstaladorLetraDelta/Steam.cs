@@ -24,6 +24,13 @@ public static class Steam
     ];
 
     /// <summary>
+    /// Carpetas donde Steam ha guardado el `libraryfolders.vdf`. Desde 2021
+    /// vive en `steamapps/`; las instalaciones anteriores lo dejaron en
+    /// `config/`, y esas siguen ahí en equipos que nunca se reinstalaron.
+    /// </summary>
+    private static readonly string[] CarpetasDelVdf = ["steamapps", "config"];
+
+    /// <summary>
     /// Devuelve las raíces de Steam existentes, sin repetir. La deduplicación
     /// es imprescindible: en una instalación nativa típica, `.steam/steam` y
     /// `.steam/root` son enlaces simbólicos a `.local/share/Steam`, así que
@@ -60,28 +67,31 @@ public static class Steam
             if (vistas.Add(raiz))
                 yield return raiz;
 
-            string vdf = Path.Combine(raiz, "steamapps", "libraryfolders.vdf");
-            if (!File.Exists(vdf))
-                continue;
-
-            string contenido;
-            try
+            foreach (string carpeta in CarpetasDelVdf)
             {
-                contenido = File.ReadAllText(vdf);
-            }
-            catch (IOException)
-            {
-                continue;
-            }
-
-            foreach (string ruta in RutasEnVdf(contenido))
-            {
-                if (!Directory.Exists(ruta))
+                string vdf = Path.Combine(raiz, carpeta, "libraryfolders.vdf");
+                if (!File.Exists(vdf))
                     continue;
 
-                string real = RutaReal(ruta);
-                if (vistas.Add(real))
-                    yield return real;
+                string contenido;
+                try
+                {
+                    contenido = File.ReadAllText(vdf);
+                }
+                catch (IOException)
+                {
+                    continue;
+                }
+
+                foreach (string ruta in RutasEnVdf(contenido))
+                {
+                    if (!Directory.Exists(ruta))
+                        continue;
+
+                    string real = RutaReal(ruta);
+                    if (vistas.Add(real))
+                        yield return real;
+                }
             }
         }
     }
@@ -119,12 +129,16 @@ public static class Steam
 
     /// <summary>
     /// Extrae las rutas de las bibliotecas de un libraryfolders.vdf.
-    /// Se buscan solo las claves "path" en lugar de interpretar el VDF entero:
-    /// el formato lleva años estable y no necesitamos nada más del archivo.
+    /// Se buscan solo los pares clave/valor en lugar de interpretar el VDF
+    /// entero: no necesitamos nada más del archivo. Se aceptan las dos formas
+    /// que ha tenido: la actual, con clave "path", y la antigua, donde la
+    /// clave era el número de la biblioteca. Las claves numéricas también
+    /// aparecen en el bloque "apps" del formato nuevo, pero ahí el valor es
+    /// un tamaño en bytes y lo descarta la comprobación de existencia.
     /// </summary>
     private static IEnumerable<string> RutasEnVdf(string contenido)
     {
-        foreach (Match coincidencia in Regex.Matches(contenido, "\"path\"\\s+\"([^\"]+)\""))
+        foreach (Match coincidencia in Regex.Matches(contenido, "\"(?:path|[0-9]+)\"\\s+\"([^\"]+)\""))
             yield return coincidencia.Groups[1].Value;
     }
 
