@@ -25,12 +25,12 @@ jobs:
 
     steps:
       - name: Clonado del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Configuración del SDK de .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -120,7 +120,7 @@ jobs:
           }
 
       - name: Subir el .exe como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: instalador-windows
           path: Output/InstaladorLetraDelta.exe
@@ -134,12 +134,12 @@ jobs:
 
     steps:
       - name: Clonado del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Configuración del SDK de .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -167,7 +167,7 @@ jobs:
           rm -rf squashfs-root
 
       - name: Subir el AppImage como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: instalador-linux
           path: Output/InstaladorLetraDelta-x86_64.AppImage
@@ -188,9 +188,14 @@ jobs:
 
     steps:
       - name: Clonado del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Descargar los artefactos de ambas plataformas
+        # Se queda en la v4 a propósito, aunque hay v8. Este job solo se ejecuta
+        # al etiquetar, así que un `workflow_dispatch` no lo prueba: subirla
+        # sería un cambio que no se puede verificar hasta el próximo release, y
+        # justo esta acción cambió la estructura de carpetas entre versiones
+        # mayores, que es de lo que depende el paso siguiente.
         uses: actions/download-artifact@v4
         with:
           path: artefactos
