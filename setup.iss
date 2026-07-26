@@ -117,6 +117,13 @@ const
   ScriptsURLMirror = 'https://github.com/BroxiCoros/DeltranslatePatch/releases/download/latest/scripts.7z';
 
   DeltaruneExe = 'DELTARUNE.exe';
+
+  // La casilla de DeltaQuick (Android) queda oculta de momento. Todo lo que la
+  // implementa sigue en su sitio y sin tocar: el argumento --droid, las rutas
+  // de los APK y la exclusion mutua con la opcion de bordes. Para volver a
+  // mostrarla basta con poner esto en True; no hay nada mas que deshacer.
+  MostrarDeltaQuick = False;
+
 var
   InfoPage: TOutputMsgWizardPage;
   CleanInstallPage: TOutputMsgWizardPage;
@@ -525,6 +532,11 @@ begin
   end;
   OffsetY := OffsetY + HelpLabel.Height + 12;
 
+  // La casilla se crea aunque este oculta, en vez de no crearla: hay dos sitios
+  // que leen su estado (la exclusion mutua de BordersCheckboxClick y el
+  // NextButtonClick de la pagina de opciones) y con un control nil reventarian.
+  // Oculta y sin marcar, PatchDeltaQuick queda siempre en False y todas las
+  // ramas de DeltaQuick se vuelven inalcanzables solas.
   DeltaQuickCheckbox := TNewCheckBox.Create(OptionsPage);
   with DeltaQuickCheckbox do
   begin
@@ -534,22 +546,27 @@ begin
     Width := OptionsPage.SurfaceWidth;
     Caption := CustomMessage('DeltaQuick1');
     Checked := False;
+    Visible := MostrarDeltaQuick;
     OnClick := @DeltaQuickCheckboxClick;
   end;
-  OffsetY := OffsetY + DeltaQuickCheckbox.Height + 4;
 
-  HelpLabel := TNewStaticText.Create(OptionsPage);
-  with HelpLabel do
+  if MostrarDeltaQuick then
   begin
-    Parent := OptionsPage.Surface;
-    Top := OffsetY;
-    Left := 24;
-    Width := OptionsPage.SurfaceWidth - 24;
-    AutoSize := False;
-    WordWrap := True;
-    Height := ScaleY(28);
-    Caption := CustomMessage('OptionsPageDeltaQuickHelp');
-    Font.Color := clGrayText;
+    OffsetY := OffsetY + DeltaQuickCheckbox.Height + 4;
+
+    HelpLabel := TNewStaticText.Create(OptionsPage);
+    with HelpLabel do
+    begin
+      Parent := OptionsPage.Surface;
+      Top := OffsetY;
+      Left := 24;
+      Width := OptionsPage.SurfaceWidth - 24;
+      AutoSize := False;
+      WordWrap := True;
+      Height := ScaleY(28);
+      Caption := CustomMessage('OptionsPageDeltaQuickHelp');
+      Font.Color := clGrayText;
+    end;
   end;
 
   GamePathPage := CreateInputDirPage(

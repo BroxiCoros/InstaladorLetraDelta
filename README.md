@@ -27,14 +27,11 @@ Instalador para Windows y Linux de la traducción al español americano de **DEL
 
 ### Opciones de instalación
 
-En la página de opciones del asistente puedes activar o desactivar dos casillas:
+En la página de opciones del asistente puedes activar o desactivar una casilla:
 
 - **Instalar versión con bordes (NXRUNE)** — variante visual que añade bordes decorativos en pantalla, basada en NXRUNE. Por defecto está desactivada y se instala la versión estándar.
-- **Aplicar la traducción a los APK de DeltaQuick (Android)** — para usuarios de la aplicación de Android. Ver la sección «Android (DeltaQuick)» más abajo.
 
-> Ambas casillas son **mutuamente excluyentes**: la versión con bordes solo aplica al juego de escritorio (no se puede aplicar a los APK), así que si marcas una de las dos, la otra se desactiva automáticamente.
-
-El **idioma inglés** se instala siempre junto al español, para que puedas alternar entre ambos desde el menú interno del juego. Es compatible tanto con el juego de escritorio como con DeltaQuick.
+El **idioma inglés** se instala siempre junto al español, para que puedas alternar entre ambos desde el menú interno del juego.
 
 ### Instalación sin conexión
 
@@ -78,6 +75,8 @@ Igual que en Windows: si dejas `lang_es.7z`, `lang_en.7z` o `scripts.7z` en la m
 ---
 
 ## Android (DeltaQuick)
+
+> **No disponible por ahora.** La casilla de DeltaQuick está oculta en el instalador, así que los pasos de esta sección no se pueden seguir con la versión actual. Se documentan aquí para cuando vuelva a activarse.
 
 Para jugar la versión traducida en Android, el flujo es algo más largo porque hay que parchear los APK que usa la app DeltaQuick. Necesitas un PC con Windows en algún momento del proceso.
 
