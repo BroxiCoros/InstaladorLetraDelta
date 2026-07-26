@@ -221,16 +221,29 @@ jobs:
         with:
           path: artefactos
 
-      - name: Reunir los archivos y calcular las sumas de verificación
-        # En Linux no hay firma de código, así que se publica un SHA256SUMS
-        # para que quien descargue pueda comprobar el archivo.
+      - name: Reunir y renombrar los archivos
+        # Los nombres llevan plataforma y versión porque es lo que se ve en la
+        # carpeta de Descargas meses después, y lo primero que hay que preguntar
+        # al dar soporte. "InstaladorLetraDelta.exe" a secas no dice ninguna
+        # de las dos cosas.
         run: |
-          mkdir -p Output
-          mv artefactos/instalador-windows/InstaladorLetraDelta.exe Output/
-          mv artefactos/instalador-linux/InstaladorLetraDelta-x86_64.AppImage Output/
-          cd Output
-          sha256sum InstaladorLetraDelta.exe InstaladorLetraDelta-x86_64.AppImage > SHA256SUMS
-          cat SHA256SUMS
+          version="${VERSION_TAG#v}"
+          mkdir -p Output Estable
+
+          mv artefactos/instalador-windows/InstaladorLetraDelta.exe \
+             "Output/InstaladorLetraDelta-$version-Windows.exe"
+          mv artefactos/instalador-linux/InstaladorLetraDelta-x86_64.AppImage \
+             "Output/InstaladorLetraDelta-$version-Linux-x86_64.AppImage"
+
+          # La publicación 'latest' conserva los nombres sin versión: su única
+          # razón de ser es ofrecer una URL de descarga que no cambie, y meterle
+          # la versión al nombre la rompería en cada release.
+          cp "Output/InstaladorLetraDelta-$version-Windows.exe" \
+             "Estable/InstaladorLetraDelta.exe"
+          cp "Output/InstaladorLetraDelta-$version-Linux-x86_64.AppImage" \
+             "Estable/InstaladorLetraDelta-x86_64.AppImage"
+
+          ls -la Output Estable
 
       - name: Preparar las notas de la versión
         id: notas
@@ -250,9 +263,7 @@ jobs:
             --title "Versión ${{ steps.notas.outputs.version }}" \
             --notes-file changelog.md \
             --latest \
-            Output/InstaladorLetraDelta.exe \
-            Output/InstaladorLetraDelta-x86_64.AppImage \
-            Output/SHA256SUMS
+            Output/*
 
       - name: Mover la etiqueta 'latest' al commit actual
         run: |
@@ -277,16 +288,11 @@ jobs:
 
           if gh release view latest >/dev/null 2>&1; then
             gh release edit latest --notes "$notas"
-            gh release upload latest \
-              Output/InstaladorLetraDelta.exe \
-              Output/InstaladorLetraDelta-x86_64.AppImage \
-              Output/SHA256SUMS --clobber
+            gh release upload latest Estable/* --clobber
           else
             gh release create latest \
               --title "Latest" \
               --notes "$notas" \
               --latest=false \
-              Output/InstaladorLetraDelta.exe \
-              Output/InstaladorLetraDelta-x86_64.AppImage \
-              Output/SHA256SUMS
+              Estable/*
           fi

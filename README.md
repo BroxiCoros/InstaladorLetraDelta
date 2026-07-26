@@ -18,7 +18,7 @@ Instalador para Windows y Linux de la traducción al español americano de **DEL
 
 ## Instalación (Windows)
 
-1. Descarga `InstaladorLetraDelta.exe` desde la sección de [*releases*](../../releases/latest) y ejecútalo.
+1. Descarga `InstaladorLetraDelta-<versión>-Windows.exe` desde la sección de [*releases*](../../releases/latest) y ejecútalo.
 2. En la pantalla de bienvenida verás un resumen de lo que se va a instalar. Pulsa «Siguiente».
 3. En la página de opciones, marca o desmarca las casillas según prefieras (ver «Opciones de instalación» más abajo).
 4. El instalador detecta automáticamente la carpeta de *DELTARUNE* y la deja rellenada: busca en todas las bibliotecas de Steam declaradas en `libraryfolders.vdf`, así que lo encuentra aunque esté en un segundo disco, y también reconoce las rutas de Steam Deck y las ubicaciones habituales de *Program Files*. Si no lo encuentra, te pedirá la carpeta manualmente.
@@ -50,10 +50,10 @@ Si descargas previamente los archivos correspondientes y los colocas junto a `In
 
 En Linux *DELTARUNE* se ejecuta con Proton, pero los archivos del juego son exactamente los mismos que en Windows, así que la traducción se aplica igual y funciona igual.
 
-1. Descarga `InstaladorLetraDelta-x86_64.AppImage` desde la sección de [*releases*](../../releases/latest).
+1. Descarga `InstaladorLetraDelta-<versión>-Linux-x86_64.AppImage` desde la sección de [*releases*](../../releases/latest).
 2. Dale permiso de ejecución. Desde el gestor de archivos: clic derecho → «Propiedades» → «Permisos» → marcar «Es ejecutable». Desde la terminal:
    ```sh
-   chmod +x InstaladorLetraDelta-x86_64.AppImage
+   chmod +x InstaladorLetraDelta-*.AppImage
    ```
 3. Ábrelo con doble clic y sigue el asistente. Es el mismo recorrido que en Windows: bienvenida, opciones, carpeta del juego e instalación.
 
