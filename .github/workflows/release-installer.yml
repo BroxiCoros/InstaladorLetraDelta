@@ -138,6 +138,27 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Comprobar que las versiones coinciden
+        # El comentario del .csproj dice que se mantiene alineado con AppVersion,
+        # pero nada lo comprobaba y se desalinearon igualmente (1.1.0 frente a
+        # 1.2.0), sin que se notara en dos releases. Al etiquetar se comprueba
+        # además que la etiqueta coincida: publicar una v1.3.0 que por dentro
+        # dice otra cosa es peor que no publicar nada.
+        run: |
+          iss=$(grep -oP '^AppVersion=\K.*' setup.iss)
+          csproj=$(grep -oP '<Version>\K[^<]+' linux/InstaladorLetraDelta/InstaladorLetraDelta.csproj)
+          echo "setup.iss=$iss  csproj=$csproj  ref=$GITHUB_REF_NAME"
+
+          if [ "$iss" != "$csproj" ]; then
+            echo "::error::AppVersion ($iss) y <Version> ($csproj) no coinciden"
+            exit 1
+          fi
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$iss" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la versión $iss"
+            exit 1
+          fi
+
       - name: Configuración del SDK de .NET 10
         uses: actions/setup-dotnet@v6
         with:
