@@ -41,10 +41,18 @@ public sealed class Instalador
 
     private readonly HttpClient _http = new();
     private readonly IProgress<Avance> _avance;
+    private readonly Func<string, Task<bool>> _preguntarPackLocal;
 
-    public Instalador(IProgress<Avance> avance)
+    /// <param name="avance">Por dónde va la instalación.</param>
+    /// <param name="preguntarPackLocal">
+    /// Recibe el nombre de un pack encontrado junto al instalador y decide si
+    /// se usa. La respuesta la da el usuario, así que la interfaz es quien lo
+    /// implementa; aquí solo se pregunta.
+    /// </param>
+    public Instalador(IProgress<Avance> avance, Func<string, Task<bool>> preguntarPackLocal)
     {
         _avance = avance;
+        _preguntarPackLocal = preguntarPackLocal;
         _http.Timeout = TimeSpan.FromMinutes(30);
     }
 
@@ -110,15 +118,20 @@ public sealed class Instalador
 
     /// <summary>
     /// Devuelve la ruta del pack: si el usuario dejó una copia junto al
-    /// instalador la usa, y si no lo descarga. Es la instalación sin conexión
-    /// que ya existe en la versión de Windows.
+    /// instalador ofrece usarla, y si no lo descarga. Es la instalación sin
+    /// conexión que ya existe en la versión de Windows.
+    ///
+    /// La pregunta no es un trámite: los packs se llaman siempre igual, así que
+    /// uno olvidado de hace meses en la carpeta de Descargas instalaría una
+    /// traducción vieja sin que nadie se enterara. Windows pregunta desde
+    /// siempre (OfflineQuestion1a en setup.iss) y aquí se hacía en silencio.
     /// </summary>
     private async Task<string> ObtenerPackAsync(string nombre, string url, string temporal,
                                                 string texto, double desde, double hasta,
                                                 CancellationToken ct)
     {
         string local = Path.Combine(CarpetaDelInstalador(), nombre);
-        if (File.Exists(local))
+        if (File.Exists(local) && await _preguntarPackLocal(nombre))
         {
             Reportar($"Usando el archivo local {nombre}...", hasta);
             return local;

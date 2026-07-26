@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="InstaladorLetraDelta.DialogoPregunta"
+        Title="Instalador LetraDelta"
+        Width="470" SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+  <StackPanel Margin="24" Spacing="20">
+    <TextBlock x:Name="TextoPregunta" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+      <Button x:Name="BotonNo" Width="140" Click="AlNo" />
+      <Button x:Name="BotonSi" Width="140" IsDefault="True" Click="AlSi" />
+    </StackPanel>
+  </StackPanel>
+</Window>

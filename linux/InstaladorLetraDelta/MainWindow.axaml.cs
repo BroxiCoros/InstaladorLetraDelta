@@ -203,7 +203,7 @@ public partial class MainWindow : Window
         });
 
         _cancelacion = new CancellationTokenSource();
-        var instalador = new Instalador(avance);
+        var instalador = new Instalador(avance, PreguntarPackLocalAsync);
         string error = await instalador.InstalarAsync(carpeta, conBordes, _cancelacion.Token);
 
         _instalacionCorrecta = error is null;
@@ -224,6 +224,25 @@ public partial class MainWindow : Window
 
         MostrarPagina(Pagina.Resultado);
     }
+
+    /// <summary>
+    /// Pregunta si usar un pack que había junto al instalador en vez de
+    /// descargarlo. Los botones dicen qué va a pasar en lugar de «Sí» y «No»:
+    /// la pregunta llega sin avisar, en mitad de la instalación, y quien la lee
+    /// puede no recordar haber dejado ese archivo ahí.
+    ///
+    /// Se llama desde el hilo de la interfaz porque el instalador no usa
+    /// ConfigureAwait(false) en ningún await, así que sus continuaciones vuelven
+    /// aquí. Si eso cambiara, ShowDialog avisaría con una excepción.
+    /// </summary>
+    private Task<bool> PreguntarPackLocalAsync(string nombre) =>
+        DialogoPregunta.MostrarAsync(
+            this,
+            $"Se encontró un archivo «{nombre}» junto al instalador.\n\n" +
+            "Puedes usarlo en lugar de descargarlo, pero si es una copia antigua " +
+            "instalarás una versión desactualizada de la traducción.",
+            "Usar ese archivo",
+            "Descargarlo");
 
     /// <summary>
     /// Muestra la salida del parcheador cuando algo va mal, para poder

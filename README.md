@@ -73,7 +73,7 @@ En Steam, clic derecho sobre *DELTARUNE* → «Propiedades» → «Archivos inst
 
 ### Instalación sin conexión
 
-Igual que en Windows: si dejas `lang_es.7z`, `lang_en.7z` o `scripts.7z` en la misma carpeta que el AppImage, se usan en lugar de descargarlos.
+Igual que en Windows: si dejas `lang_es.7z`, `lang_en.7z` o `scripts.7z` en la misma carpeta que el AppImage, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Son los mismos nombres que en la [sección de Windows](#instalación-sin-conexión).
 
 ---
 
