@@ -38,8 +38,16 @@
         </StackPanel>
         <TextBlock Text="La traducción se aplicará sobre tu instalación actual del juego. Las partidas guardadas no se verán afectadas."
                    TextWrapping="Wrap" Margin="0,6,0,0" />
+        <Border CornerRadius="4" Padding="10" Margin="0,4,0,0" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Antes de empezar" FontWeight="SemiBold" />
+            <TextBlock Text="Debe ser una copia limpia del juego, sin otros parches ni traducciones instalados antes. Si ya habías aplicado alguno, o no lo recuerdas, verifica la integridad de los archivos en Steam antes de continuar."
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
         <TextBlock Text="En Linux el juego funciona con Proton, pero los archivos del juego son los mismos que en Windows y el parche se aplica igual."
-                   TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,6,0,0" />
+                   TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,2,0,0" />
       </StackPanel>
 
       <!-- 2. Opciones -->

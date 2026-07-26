@@ -41,18 +41,21 @@ tr.wpWelcome1=Descripción de la instalación
 tr.wpWelcome2=¿Qué se va a instalar?
 tr.wpWelcome3=La instalación de la traducción incluye:
 tr.wpWelcome3a= • Mod de "Deltranslate"
-tr.wpWelcome4= • Traducción completa del capítulo 1
-tr.wpWelcome5= • Traducción completa del capítulo 2
-tr.wpWelcome6= • Traducción completa del capítulo 3
-tr.wpWelcome7= • Traducción completa del capítulo 4
-tr.wpWelcome8= • Traducción completa del capítulo 5
+tr.wpWelcome4= • Traducción completa de los capítulos 1 a 5
 tr.wpWelcome9=La traducción se aplicará sobre la instalación actual del juego.
 tr.wpWelcome10=Las partidas guardadas no se verán afectadas.
+tr.wpClean1=Antes de empezar
+tr.wpClean2=Requisitos de la instalación
+tr.wpClean3=La traducción debe aplicarse sobre una copia limpia del juego, sin otros parches ni traducciones instalados antes.
+tr.wpClean4=Si ya habías aplicado algún parche, o no lo recuerdas, verifica la integridad de los archivos en Steam antes de continuar:
+tr.wpClean5=     Clic derecho sobre DELTARUNE → «Propiedades» → «Archivos instalados» → «Verificar la integridad de los archivos del juego»
+tr.wpClean6=Steam restaura los originales y la instalación parte de cero.
 tr.CreateInputDirPage1=Selecciona la carpeta de DELTARUNE
 tr.CreateInputDirPage2=¿Dónde está instalado el juego?
 tr.CreateInputDirPage3=Selecciona la carpeta que contiene "DELTARUNE.exe" y las carpetas "chapter1_windows" ... "chapter5_windows".
 tr.CreateInputDirPage4=Suele tener este aspecto: 
 tr.FinishedText1=La traducción al español se ha instalado correctamente en tu equipo.
+tr.FinishedText1a=Para revertirla, usa «Verificar la integridad de los archivos del juego» en Steam.
 tr.FinishedText2=Pulsa «Finalizar» para salir del instalador.
 tr.ProgressPage1a=Realizando la instalación
 tr.ProgressPage1b=Por favor, espera...
@@ -116,6 +119,7 @@ const
   DeltaruneExe = 'DELTARUNE.exe';
 var
   InfoPage: TOutputMsgWizardPage;
+  CleanInstallPage: TOutputMsgWizardPage;
   OptionsPage: TWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
@@ -460,21 +464,33 @@ begin
     CustomMessage('wpWelcome2'),
     CustomMessage('wpWelcome3') + #13#10 +
     CustomMessage('wpWelcome3a') + #13#10 +
-    CustomMessage('wpWelcome4') + #13#10 +
-    CustomMessage('wpWelcome5') + #13#10 +
-    CustomMessage('wpWelcome6') + #13#10 +
-    CustomMessage('wpWelcome7') + #13#10 +
-    CustomMessage('wpWelcome8') + #13#10#13#10 +
+    CustomMessage('wpWelcome4') + #13#10#13#10 +
     CustomMessage('wpWelcome9') + #13#10 +
     CustomMessage('wpWelcome10') + #13#10#13#10 +
     Format(CustomMessage('wpWelcome11'), ['"lang_es.7z", "lang_en.7z" y "scripts.7z"'])
+  );
+
+  // ---- Pagina de requisitos ----
+  // Va en pagina propia y no junto al resto de la informacion por dos razones:
+  // el cuadro de CreateOutputMsgPage no tiene barra de desplazamiento y lo que
+  // no cabe se recorta sin avisar, y esto conviene que se lea entero. Que la
+  // copia este limpia no hay forma de comprobarlo desde aqui, asi que lo unico
+  // que se puede hacer es decirlo antes de tocar nada.
+  CleanInstallPage := CreateOutputMsgPage(
+    InfoPage.ID,
+    CustomMessage('wpClean1'),
+    CustomMessage('wpClean2'),
+    CustomMessage('wpClean3') + #13#10#13#10 +
+    CustomMessage('wpClean4') + #13#10#13#10 +
+    CustomMessage('wpClean5') + #13#10#13#10 +
+    CustomMessage('wpClean6')
   );
 
   // ---- Pagina de opciones (casillas) ----
   // Cada casilla viene seguida de un texto pequeno explicando que hace.
   // El espaciado vertical es manual para que se vea aireado.
   OptionsPage := CreateCustomPage(
-    InfoPage.ID,
+    CleanInstallPage.ID,
     CustomMessage('OptionsPage1'),
     CustomMessage('OptionsPage2')
   );
@@ -557,8 +573,8 @@ begin
   else
     GamePathPage.Values[0] := ExpandConstant('{sd}\Program Files (x86)\Steam\steamapps\common\DELTARUNE');
 
-  FinishedText := CustomMessage('FinishedText1') + #13#10 +
-                  + #13#10 +
+  FinishedText := CustomMessage('FinishedText1') + #13#10#13#10 +
+                  CustomMessage('FinishedText1a') + #13#10#13#10 +
                   CustomMessage('FinishedText2');
 
   ProgressPage := CreateOutputProgressPage(CustomMessage('ProgressPage1a'), CustomMessage('ProgressPage1b'));
