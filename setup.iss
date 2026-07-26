@@ -1,6 +1,6 @@
 [Setup]
 AppName=LetraDelta — Instalador de la traducción de DELTARUNE
-AppVersion=1.2.0
+AppVersion=1.3.0
 AppPublisher=BroxiCoros
 AppPublisherURL=https://github.com/BroxiCoros/LetraDelta
 AppSupportURL=https://discord.gg/ndkjnhXPPr
