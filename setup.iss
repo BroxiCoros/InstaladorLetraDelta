@@ -420,6 +420,24 @@ begin
     DeltaQuickCheckbox.Checked := False;
 end;
 
+// El boton "Examinar" de CreateInputDirPage no abre el selector de carpetas de
+// Windows, sino un formulario que Inno Setup dibuja el mismo con su propio
+// arbol. Es asi en todas las versiones, asi que actualizar no lo cambia. La
+// funcion BrowseForFolder si abre el selector normal (IFileDialog desde Inno
+// Setup 6.6.0), de modo que se reemplaza el manejador del boton por este.
+//
+// Sin boton de carpeta nueva: aqui se busca un juego ya instalado, no hay nada
+// que crear. Y se quita la barra final por lo mismo que en InitializeWizard: la
+// ruta viaja entrecomillada hasta el parcheador.
+procedure GamePathBrowseClick(Sender: TObject);
+var
+  Dir: String;
+begin
+  Dir := GamePathPage.Values[0];
+  if BrowseForFolder(CustomMessage('CreateInputDirPage1'), Dir, False) then
+    GamePathPage.Values[0] := RemoveBackslashUnlessRoot(Dir);
+end;
+
 procedure InitializeWizard;
 var
   OffsetY: Integer;
@@ -527,6 +545,7 @@ begin
     False, ''
   );
   GamePathPage.Add('');
+  GamePathPage.Buttons[0].OnClick := @GamePathBrowseClick;
 
   // Se rellena con la carpeta detectada para que el usuario no tenga que
   // buscarla; si no hay ninguna, se deja la ruta habitual como pista.
