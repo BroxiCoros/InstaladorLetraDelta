@@ -71,12 +71,10 @@ tr.ExceptionMsg2a=No se pudo descomprimir el archivo "%s" - hay archivos en uso,
 tr.ExceptionMsg2b=Si la carpeta del juego tiene el atributo "Solo lectura", quítaselo (no olvides "Aplicar") e inténtalo de nuevo.
 tr.RaiseException1=Archivo no encontrado, ruta - 
 tr.DownloadToTempWithMirror1=Descargando archivos de idioma (español)...
-tr.DownloadToTempWithMirror1b=Descargando archivos de idioma (inglés)...
 tr.DownloadToTempWithMirror2=Descargando scripts...
 tr.DownloadToTempWithMirror3=Se produjo un error al descargar los archivos: 
 tr.ProgressPage3a=Descomprimiendo el parcheador...
 tr.ProgressPage3b=Descomprimiendo archivos de idioma (español)...
-tr.ProgressPage3b2=Descomprimiendo archivos de idioma (inglés)...
 tr.ProgressPage3c=Descomprimiendo scripts...
 tr.ProgressPage3d=Aplicando el parche...
 tr.HandlePatcherError1=Error al aplicar el parche, código de error: 
@@ -86,7 +84,6 @@ tr.FinishedText3a=No se pudo instalar la traducción de DELTARUNE debido a un er
 tr.FinishedText3b=Pulsa «Finalizar» para salir del instalador.
 tr.FinishedHeadingLabel1=Completando la instalación de la traducción de DELTARUNE
 tr.OfflineQuestion1a=Se encontró un archivo lang_es.7z junto al instalador. ¿Usarlo en lugar de descargarlo?
-tr.OfflineQuestion1b=Se encontró un archivo lang_en.7z junto al instalador. ¿Usarlo en lugar de descargarlo?
 tr.OfflineQuestion2=Se encontró un archivo scripts.7z junto al instalador. ¿Usarlo en lugar de descargarlo?
 tr.wpWelcome11=Si descargas previamente los archivos %s y los colocas junto a este instalador, se te preguntará si quieres usarlos en vez de descargarlos.
 tr.DeltaQuick1=Aplicar la traducción a los APK de DeltaQuick (Android)
@@ -104,11 +101,6 @@ const
   // Pack de idioma español americano (LetraDelta).
   LangESURL       = 'https://github.com/BroxiCoros/LetraDelta/releases/download/latest/lang.7z';
   LangESURLMirror = 'https://github.com/BroxiCoros/LetraDelta/releases/download/latest/lang.7z';
-
-  // Pack de idioma inglés (LetraDelta-EN, fork limpio de EngDeltranslatePack
-  // reorganizado a estructura multi-idioma `lang/en/`).
-  LangENURL       = 'https://github.com/BroxiCoros/LetraDelta-EN/releases/download/latest/lang.7z';
-  LangENURLMirror = 'https://github.com/BroxiCoros/LetraDelta-EN/releases/download/latest/lang.7z';
 
   // Scripts del mod (DeltranslatePatch fork con etapas 1-6 + bordes integrados).
   // Los Borders.csx y los PNGs de NXRUNE viajan dentro de este mismo .7z;
@@ -414,11 +406,6 @@ end;
 // el data.win), mientras que DeltaQuick parchea APKs de Android sin
 // tocar el data.win. Si el usuario marca una de las dos, desmarcamos
 // la otra al vuelo.
-//
-// El pack de ingles ya no es una opcion: se instala siempre junto al
-// espanol para poder alternar de idioma desde el menu del juego. Es
-// compatible con ambas plataformas (escritorio y DeltaQuick), asi que
-// no participa en esta exclusion.
 procedure DeltaQuickCheckboxClick(Sender: TObject);
 begin
   if DeltaQuickCheckbox.Checked then
@@ -474,7 +461,7 @@ begin
     CustomMessage('wpWelcome4') + #13#10#13#10 +
     CustomMessage('wpWelcome9') + #13#10 +
     CustomMessage('wpWelcome10') + #13#10#13#10 +
-    Format(CustomMessage('wpWelcome11'), ['"lang_es.7z", "lang_en.7z" y "scripts.7z"'])
+    Format(CustomMessage('wpWelcome11'), ['"lang_es.7z" y "scripts.7z"'])
   );
 
   // ---- Pagina de requisitos ----
@@ -763,11 +750,10 @@ end;
 
 function DownloadAndExtractFiles(): Boolean;
 var
-  LangESZipPath, LangENZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg, ArgString: String;
+  LangESZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg, ArgString: String;
   ResultCode: Integer;
 begin
   LangESZipPath  := ExpandConstant('{tmp}\lang_es.7z');
-  LangENZipPath  := ExpandConstant('{tmp}\lang_en.7z');
   ScriptsZipPath := ExpandConstant('{tmp}\scripts.7z');
   PatcherZipPath := ExpandConstant('{tmp}\DeltaPatcherCLI.7z');
   GamePath := GamePathPage.Values[0];
@@ -784,19 +770,6 @@ begin
     end
     else
       DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1'), LangESURL, LangESURLMirror, 'lang_es.7z');
-
-    // ---- Pack de idioma inglés (LetraDelta-EN) — siempre ----
-    // El inglés se instala siempre junto al español para poder alternar
-    // de idioma desde el menú del juego. Ya no es una opción del wizard.
-    if FileExists(ExpandConstant('{src}\lang_en.7z')) then
-    begin
-      if MsgBox(CustomMessage('OfflineQuestion1b'), mbConfirmation, MB_YESNO) = IDYES then
-        CopyFile(ExpandConstant('{src}\lang_en.7z'), LangENZipPath, False)
-      else
-        DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1b'), LangENURL, LangENURLMirror, 'lang_en.7z');
-    end
-    else
-      DownloadToTempWithMirror(CustomMessage('DownloadToTempWithMirror1b'), LangENURL, LangENURLMirror, 'lang_en.7z');
 
     // ---- Scripts del mod (incluye Borders.csx + PNGs si --borders) ----
     if FileExists(ExpandConstant('{src}\scripts.7z')) then
@@ -818,14 +791,11 @@ begin
     ProgressPage.SetText(CustomMessage('ProgressPage3a'), '');
     ExtractArchive(PatcherZipPath, ExpandConstant('{tmp}'));
 
-    // Cada pack de idioma trae una subcarpeta `lang/<code>/` distinta,
-    // así que extraer ambos sobre la misma carpeta del juego coexisten
-    // sin chocar. El mod escanea `lang/*/settings.json` y los detecta.
+    // El pack trae su subcarpeta `lang/es/`, que el mod detecta escaneando
+    // `lang/*/settings.json`. El inglés original no hace falta descargarlo:
+    // el propio mod lo conserva.
     ProgressPage.SetText(CustomMessage('ProgressPage3b'), '');
     ExtractArchive(LangESZipPath, GamePath);
-
-    ProgressPage.SetText(CustomMessage('ProgressPage3b2'), '');
-    ExtractArchive(LangENZipPath, GamePath);
 
     ProgressPage.SetText(CustomMessage('ProgressPage3c'), '');
     ExtractArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));

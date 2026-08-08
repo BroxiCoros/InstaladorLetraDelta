@@ -21,9 +21,6 @@ public sealed class Instalador
 {
     // Pack de español americano (LetraDelta).
     private const string UrlLangEs = "https://github.com/BroxiCoros/LetraDelta/releases/download/latest/lang.7z";
-    // Pack de inglés (LetraDelta-EN). Se instala siempre junto al español para
-    // poder alternar de idioma desde el menú del juego.
-    private const string UrlLangEn = "https://github.com/BroxiCoros/LetraDelta-EN/releases/download/latest/lang.7z";
     // Scripts del mod. Los Borders.csx y los PNG de NXRUNE viajan dentro, así
     // que la opción de bordes no necesita ninguna descarga adicional.
     private const string UrlScripts = "https://github.com/BroxiCoros/DeltranslatePatch/releases/download/latest/scripts.7z";
@@ -72,20 +69,14 @@ public sealed class Instalador
         {
             string langEs = await ObtenerPackAsync("lang_es.7z", UrlLangEs, temporal,
                                                    "Descargando archivos de idioma (español)...",
-                                                   0, 30, ct);
-            string langEn = await ObtenerPackAsync("lang_en.7z", UrlLangEn, temporal,
-                                                   "Descargando archivos de idioma (inglés)...",
-                                                   30, 32, ct);
+                                                   0, 32, ct);
             string scripts = await ObtenerPackAsync("scripts.7z", UrlScripts, temporal,
                                                     "Descargando scripts...", 32, 45, ct);
 
-            // Cada pack de idioma trae su propia subcarpeta lang/<código>, así
-            // que ambos se descomprimen sobre la carpeta del juego sin chocar.
+            // El pack trae su propia subcarpeta lang/es. El inglés original no
+            // se descarga: el propio mod lo conserva.
             Reportar("Descomprimiendo archivos de idioma (español)...", 45);
             await DescomprimirAsync(langEs, carpetaJuego, ct);
-
-            Reportar("Descomprimiendo archivos de idioma (inglés)...", 50);
-            await DescomprimirAsync(langEn, carpetaJuego, ct);
 
             Reportar("Descomprimiendo scripts...", 52);
             string carpetaScripts = Path.Combine(temporal, "scripts");

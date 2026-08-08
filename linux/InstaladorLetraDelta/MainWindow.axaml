@@ -34,7 +34,6 @@
         <StackPanel Margin="12,0,0,0" Spacing="3">
           <TextBlock Text="• Mod de «Deltranslate»" />
           <TextBlock Text="• Traducción completa de los capítulos 1 a 5" />
-          <TextBlock Text="• El inglés original, para poder alternar desde el menú del juego" />
         </StackPanel>
         <TextBlock Text="La traducción se aplicará sobre tu instalación actual del juego. Las partidas guardadas no se verán afectadas."
                    TextWrapping="Wrap" Margin="0,6,0,0" />

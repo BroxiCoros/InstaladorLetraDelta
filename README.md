@@ -8,7 +8,7 @@ Instalador para Windows y Linux de la traducción al español americano de **DEL
 
 - **Edición compatible:** [Steam](https://store.steampowered.com/app/1671210/DELTARUNE/).
 - **Versión del juego compatible:** 1.04 (v17).
-- **Idioma:** español americano (es_mx). El inglés original también queda disponible para poder alternar desde el menú del juego.
+- **Idioma:** español americano (es_mx). El mod conserva el inglés original, así que puedes alternar entre ambos desde el menú del juego.
 - **Contenido:** traducción completa de los capítulos 1 a 5.
 - Las partidas guardadas no se ven afectadas por la instalación.
 - La traducción intenta ser fiel a la obra original. Es apta tanto para nuevos jugadores como para quienes ya conocen el juego y quieren disfrutarlo en su idioma.
@@ -31,15 +31,12 @@ En la página de opciones del asistente puedes activar o desactivar una casilla:
 
 - **Instalar versión con bordes (NXRUNE)** — variante visual que añade bordes decorativos en pantalla, basada en NXRUNE. Por defecto está desactivada y se instala la versión estándar.
 
-El **idioma inglés** se instala siempre junto al español, para que puedas alternar entre ambos desde el menú interno del juego.
-
 ### Instalación sin conexión
 
 Si descargas previamente los archivos correspondientes y los colocas junto a `InstaladorLetraDelta.exe`, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Los nombres esperados son:
 
 - `lang_es.7z` — pack de español. Indispensable.
 - `scripts.7z` — *scripts* del mod. Indispensable.
-- `lang_en.7z` — pack de inglés. Indispensable (se instala siempre).
 
 ---
 
@@ -70,7 +67,7 @@ En Steam, clic derecho sobre *DELTARUNE* → «Propiedades» → «Archivos inst
 
 ### Instalación sin conexión
 
-Igual que en Windows: si dejas `lang_es.7z`, `lang_en.7z` o `scripts.7z` en la misma carpeta que el AppImage, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Son los mismos nombres que en la [sección de Windows](#instalación-sin-conexión).
+Igual que en Windows: si dejas `lang_es.7z` o `scripts.7z` en la misma carpeta que el AppImage, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Son los mismos nombres que en la [sección de Windows](#instalación-sin-conexión).
 
 ---
 
@@ -106,7 +103,6 @@ Para jugar la versión traducida en Android, el flujo es algo más largo porque 
 ## Repositorios del proyecto
 
 - **[BroxiCoros/LetraDelta](https://github.com/BroxiCoros/LetraDelta)** — pack de español (`lang.7z`).
-- **[BroxiCoros/LetraDelta-EN](https://github.com/BroxiCoros/LetraDelta-EN)** — pack de inglés (`lang.7z`).
 - **[BroxiCoros/DeltranslatePatch](https://github.com/BroxiCoros/DeltranslatePatch)** — *fork* del mod *Deltranslate* (`scripts.7z`).
 - **[BroxiCoros/InstaladorLetraDelta](https://github.com/BroxiCoros/InstaladorLetraDelta)** — este repositorio.
 
