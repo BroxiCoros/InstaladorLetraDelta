@@ -233,7 +233,7 @@ jobs:
         # firma ad hoc es válida (sin ella el binario no se ejecutaría en Apple
         # Silicon) y que los binarios que viajan dentro responden.
         run: |
-          codesign --verify --deep --strict --verbose=2 build/InstaladorLetraDelta.app
+          codesign --verify --strict --verbose=2 build/InstaladorLetraDelta.app
           ./build/InstaladorLetraDelta.app/Contents/MacOS/DeltaPatcherCLI | head -5
           ./build/InstaladorLetraDelta.app/Contents/MacOS/7zz | head -2
 

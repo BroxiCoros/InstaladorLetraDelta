@@ -160,9 +160,19 @@ codesign --force --sign - --timestamp=none "$APP/Contents/MacOS/7zz"
 codesign --force --sign - --timestamp=none "$APP/Contents/MacOS/DeltaPatcherCLI"
 find "$APP/Contents/MacOS" -name '*.dylib' -exec \
   codesign --force --sign - --timestamp=none {} \;
-codesign --force --sign - --timestamp=none "$APP/Contents/MacOS/InstaladorLetraDelta"
+# Firmar el paquete firma también su ejecutable principal y sella el resto del
+# contenido, así que no hace falta firmar InstaladorLetraDelta por separado.
 codesign --force --sign - --timestamp=none "$APP"
-codesign --verify --deep --strict "$APP"
+
+# La verificación va SIN --deep a propósito. Con --deep, codesign trata cada
+# .dll de .NET como código anidado que debería llevar firma propia y falla con
+# "code object is not signed at all". Los .dll son ensamblados gestionados, no
+# Mach-O: no se firman, van sellados como recursos del paquete, que es
+# justo lo que comprueba la verificación normal.
+codesign --verify --strict "$APP"
+# Los binarios anidados sí son código de verdad, y esos se comprueban uno a uno.
+codesign --verify --strict "$APP/Contents/MacOS/7zz"
+codesign --verify --strict "$APP/Contents/MacOS/DeltaPatcherCLI"
 
 # ---------------------------------------------------------------------------
 # DMG
