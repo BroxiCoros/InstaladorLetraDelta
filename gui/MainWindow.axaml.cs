@@ -169,10 +169,9 @@ public partial class MainWindow : Window
         aviso.IsVisible = yaInstalada;
         if (yaInstalada)
         {
-            aviso.Text = "Parece que esta traducción ya está instalada en tu copia del juego. "
-                       + "Verifica la integridad de los archivos en Steam antes de continuar: "
-                       + "aplicar el parche sobre un juego ya parcheado puede dejarlo a medias "
-                       + "sin dar ningún error.";
+            aviso.Text = "Esta copia del juego ya parece tener la traducción instalada. "
+                       + "Verifica la integridad de los archivos en Steam antes de continuar, "
+                       + "ya que aplicarla de nuevo puede causar problemas.";
             aviso.Foreground = Brushes.Goldenrod;
         }
     }
@@ -246,6 +245,25 @@ public partial class MainWindow : Window
                 : "En esa carpeta no está DELTARUNE: falta chapter5_windows/data.win.";
             aviso.Foreground = Brushes.IndianRed;
             siguiente.IsEnabled = false;
+            return;
+        }
+
+        // La comprobación de «ya parcheado» se repite aquí, y no solo en la
+        // página de «Antes de empezar», porque allí se mira la carpeta que
+        // Steam detectó al arrancar: si el usuario elige otra a mano —que es
+        // justo cuando más fácil es apuntar a un juego ya parcheado— aquella
+        // comprobación ya pasó y nadie vuelve a mirar. Esta es la última
+        // pantalla antes de instalar, así que es la que tiene que acertar.
+        //
+        // Se lee un archivo de 3 MB, pero solo cuando la ruta ya es válida, o
+        // sea un par de veces y no en cada tecla.
+        if (Juego.YaTraducido(carpeta))
+        {
+            aviso.Text = "Juego encontrado. La traducción ya parece estar instalada en esta copia: "
+                       + "verifica la integridad de los archivos en Steam antes de continuar, "
+                       + "ya que aplicarla de nuevo puede causar problemas.";
+            aviso.Foreground = Brushes.Goldenrod;
+            siguiente.IsEnabled = true;
             return;
         }
 
