@@ -20,10 +20,19 @@ Instalador para Windows, Linux y macOS de la traducción al español americano d
 
 1. Descarga `InstaladorLetraDelta-<versión>-Windows.exe` desde la sección de [*releases*](../../releases/latest) y ejecútalo.
 2. En la pantalla de bienvenida verás un resumen de lo que se va a instalar. Pulsa «Siguiente».
-3. En la página de opciones, marca o desmarca las casillas según prefieras (ver «Opciones de instalación» más abajo).
-4. El instalador detecta automáticamente la carpeta de *DELTARUNE* y la deja rellenada: busca en todas las bibliotecas de Steam declaradas en `libraryfolders.vdf`, así que lo encuentra aunque esté en un segundo disco, y también reconoce las rutas de Steam Deck y las ubicaciones habituales de *Program Files*. Si no lo encuentra, te pedirá la carpeta manualmente.
-5. Pulsa «Instalar». El asistente descarga los archivos necesarios y aplica el parche.
-6. Listo. El juego queda traducido. Puedes alternar entre español e inglés desde el menú del juego cuando quieras.
+3. La página «Antes de empezar» recuerda que el parche debe aplicarse sobre una copia limpia del juego. Si el instalador detecta que el archivo de datos ya está modificado, te avisa ahí mismo (ver «Aviso de copia ya modificada» más abajo).
+4. En la página de opciones, marca o desmarca las casillas según prefieras (ver «Opciones de instalación» más abajo).
+5. El instalador detecta automáticamente la carpeta de *DELTARUNE* y la deja rellenada: busca en todas las bibliotecas de Steam declaradas en `libraryfolders.vdf`, así que lo encuentra aunque esté en un segundo disco, y también reconoce las rutas de Steam Deck y las ubicaciones habituales de *Program Files*. Si no lo encuentra, te pedirá la carpeta manualmente.
+6. Pulsa «Instalar». El asistente descarga los archivos necesarios y aplica el parche.
+7. Listo. El juego queda traducido. Puedes alternar entre español e inglés desde el menú del juego cuando quieras.
+
+### Aviso de copia ya modificada
+
+El parche está pensado para aplicarse sobre los archivos originales del juego. Si encima ya hay otro parche, el resultado puede no funcionar como debería, y el parcheador no siempre puede avisarlo.
+
+Para ayudar con eso, el instalador mira dentro del archivo de datos del juego y avisa si ve que ya está modificado. El aviso aparece en la página «Antes de empezar» y en la página de la carpeta, y no bloquea la instalación: solo recomienda usar «Verificar la integridad de los archivos del juego» en Steam antes de continuar, que deja el juego como recién descargado.
+
+La comprobación no lo detecta todo, así que la ausencia de aviso no garantiza que la copia esté limpia. Está en las tres plataformas (Windows, Linux y macOS).
 
 ### Opciones de instalación
 
@@ -49,7 +58,7 @@ En Linux *DELTARUNE* se ejecuta con Proton, pero los archivos del juego son exac
    ```sh
    chmod +x InstaladorLetraDelta-*.AppImage
    ```
-3. Ábrelo con doble clic y sigue el asistente. Es el mismo recorrido que en Windows: bienvenida, opciones, carpeta del juego e instalación.
+3. Ábrelo con doble clic y sigue el asistente. Es el mismo recorrido que en Windows: bienvenida, «antes de empezar», opciones, carpeta del juego e instalación.
 
 **No hace falta instalar nada más.** El AppImage lleva dentro todo lo que necesita, incluidos el parcheador y 7-Zip, así que funciona en cualquier distribución sin tocar el gestor de paquetes.
 

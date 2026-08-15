@@ -50,6 +50,8 @@ tr.wpClean3=La traducción debe aplicarse sobre una copia limpia del juego, sin 
 tr.wpClean4=Si ya habías aplicado algún parche, o no lo recuerdas, verifica la integridad de los archivos en Steam antes de continuar:
 tr.wpClean5=     Clic derecho sobre DELTARUNE → «Propiedades» → «Archivos instalados» → «Verificar la integridad de los archivos del juego»
 tr.wpClean6=Steam restaura los originales y la instalación parte de cero.
+tr.AlreadyPatched1=El archivo de datos de esta copia del juego ya está modificado, así que no es una copia limpia.
+tr.AlreadyPatched2=Verifica la integridad de los archivos en Steam antes de continuar, para que el parche se aplique sobre los archivos originales.
 tr.CreateInputDirPage1=Selecciona la carpeta de DELTARUNE
 tr.CreateInputDirPage2=¿Dónde está instalado el juego?
 tr.CreateInputDirPage3=Selecciona la carpeta que contiene "DELTARUNE.exe" y las carpetas "chapter1_windows" ... "chapter5_windows".
@@ -110,6 +112,16 @@ const
 
   DeltaruneExe = 'DELTARUNE.exe';
 
+  // Archivo de datos del juego del menu: el mas pequeno de los seis (unos
+  // 3 MB) y el primero que toca el parche.
+  DeltaruneData = 'data.win';
+
+  // Nombre de una funcion que el mod anade al archivo de datos y que en los
+  // archivos originales no aparece ninguna vez. Es la unica forma que hay
+  // desde aqui de saber si la copia esta limpia. Es la misma comprobacion que
+  // hace el instalador de Linux (ver gui/Juego.cs).
+  PatchSignature = 'scr_lang_load';
+
   // La casilla de DeltaQuick (Android) queda oculta de momento. Todo lo que la
   // implementa sigue en su sitio y sin tocar: el argumento --droid, las rutas
   // de los APK y la exclusion mutua con la opcion de bordes. Para volver a
@@ -136,6 +148,17 @@ var
   // InitializeWizard y se leen al pulsar Siguiente desde esa pagina.
   BordersCheckbox: TNewCheckBox;
   DeltaQuickCheckbox: TNewCheckBox;
+
+  // Avisos de "esta copia ya esta modificada". Se crean siempre y se muestran
+  // solo cuando la comprobacion da positivo.
+  CleanPatchedLabel: TNewStaticText;
+  GamePathPatchedLabel: TNewStaticText;
+
+  // Ultima ruta comprobada y su resultado. La comprobacion lee un archivo de
+  // 3 MB y el aviso de la pagina de la carpeta se recalcula en cada tecla, asi
+  // que sin esto se releeria el archivo entero mientras el usuario escribe.
+  LastPatchCheckPath: String;
+  LastPatchCheckResult: Boolean;
 
   // Variables booleanas que reflejan el estado de las casillas tras
   // confirmar la pagina de opciones. Se consultan luego en
@@ -166,6 +189,56 @@ begin
   Result := FileExists(DirPath + DeltaruneExe);
   if Result then
     Result := FileExists(AddBackslash(DirPath) + 'chapter5_windows\data.win');
+end;
+
+// Si esta copia del juego ya esta modificada por un parche.
+//
+// Se busca la firma DENTRO del archivo de datos, y no la carpeta `lang`
+// que crea el pack, por un motivo concreto: "Verificar la integridad de los
+// archivos" de Steam restaura los archivos del juego, pero no borra los que
+// sobran, asi que `lang` sobrevive a la limpieza. Mirar ahi delataria para
+// siempre a cualquiera que hubiera instalado la traduccion una vez, incluso
+// despues de dejar el juego impecable, y un aviso que sale siempre no lo lee
+// nadie. El archivo de datos si lo restaura Steam: el aviso desaparece justo
+// cuando debe.
+//
+// El resultado se guarda en LastPatchCheckPath/LastPatchCheckResult porque
+// esto se llama desde el OnChange del campo de la carpeta.
+function IsGamePatched(DirPath: String): Boolean;
+var
+  Data: AnsiString;
+begin
+  Result := False;
+
+  if DirPath = '' then
+    Exit;
+
+  DirPath := AddBackslash(DirPath);
+
+  if DirPath = LastPatchCheckPath then
+  begin
+    Result := LastPatchCheckResult;
+    Exit;
+  end;
+
+  // Sin juego no hay nada que afirmar, y no se guarda en la cache: la ruta
+  // aun se esta escribiendo y cambiara en la siguiente tecla.
+  if not CheckDeltaruneLoc(DirPath) then
+    Exit;
+
+  // Si el archivo no se puede leer no se afirma nada: el aviso es una ayuda,
+  // no una comprobacion de la que dependa la instalacion.
+  //
+  // Pos convierte el AnsiString a Unicode con la pagina de codigos del
+  // sistema. Con los bytes sueltos de un binario eso no siempre es
+  // reversible, pero solo puede hacer que la firma pase desapercibida, nunca
+  // que aparezca donde no esta: el peor caso es quedarse sin aviso, que es
+  // justo lo que habia antes de esto.
+  if LoadStringFromFile(DirPath + DeltaruneData, Data) then
+    Result := Pos(PatchSignature, Data) > 0;
+
+  LastPatchCheckPath := DirPath;
+  LastPatchCheckResult := Result;
 end;
 
 // ---- Deteccion del juego a traves de Steam ----
@@ -436,6 +509,38 @@ begin
     GamePathPage.Values[0] := RemoveBackslashUnlessRoot(Dir);
 end;
 
+// ---- Aviso de "esta copia ya esta modificada" ----
+//
+// Se comprueba en las dos paginas donde puede cambiar la respuesta: la de
+// requisitos mira la carpeta que se detecto al arrancar, y la de la carpeta
+// vuelve a mirar porque es donde el usuario puede elegir otra a mano, que es
+// justo cuando mas facil es apuntar a un juego ya parcheado. Aquella
+// comprobacion ya paso y nadie volveria a mirar.
+
+// Olvida el resultado guardado. Se llama al entrar en cada una de las dos
+// paginas porque el aviso pide precisamente ir a Steam a verificar la
+// integridad: quien lo haga y vuelva al asistente tiene que ver el aviso ya
+// desaparecido, no la respuesta de antes.
+procedure ForgetPatchCheck;
+begin
+  LastPatchCheckPath := '';
+end;
+
+procedure UpdateCleanPageWarning;
+begin
+  CleanPatchedLabel.Visible := IsGamePatched(GamePathPage.Values[0]);
+end;
+
+procedure UpdateGamePathWarning;
+begin
+  GamePathPatchedLabel.Visible := IsGamePatched(GamePathPage.Values[0]);
+end;
+
+procedure GamePathEditChange(Sender: TObject);
+begin
+  UpdateGamePathWarning;
+end;
+
 procedure InitializeWizard;
 var
   OffsetY: Integer;
@@ -479,6 +584,28 @@ begin
     CustomMessage('wpClean5') + #13#10#13#10 +
     CustomMessage('wpClean6')
   );
+
+  // El aviso va debajo del texto fijo y en otro color: lo que dice no es un
+  // requisito general, sino algo que se ha comprobado en esta copia concreta.
+  // Se cuelga del final de MsgLabel, cuya altura Inno ya ha ajustado al texto
+  // (AdjustLabelHeight), para que siga en su sitio si ese texto cambia.
+  CleanPatchedLabel := TNewStaticText.Create(CleanInstallPage);
+  with CleanPatchedLabel do
+  begin
+    Parent := CleanInstallPage.Surface;
+    AutoSize := False;
+    WordWrap := True;
+    Left := 0;
+    Top := CleanInstallPage.MsgLabel.Top + CleanInstallPage.MsgLabel.Height + ScaleY(12);
+    Width := CleanInstallPage.SurfaceWidth;
+    Caption := CustomMessage('AlreadyPatched1') + ' ' + CustomMessage('AlreadyPatched2');
+    // La altura la decide el texto ya partido en lineas, que depende del ancho
+    // y del tamano de fuente del sistema: con un numero fijo, el aviso se
+    // recortaria en cuanto alguno de los dos cambiase.
+    AdjustHeight;
+    Font.Color := $0020A5DA;
+    Visible := False;
+  end;
 
   // ---- Pagina de opciones (casillas) ----
   // Cada casilla viene seguida de un texto pequeno explicando que hace.
@@ -566,6 +693,28 @@ begin
   );
   GamePathPage.Add('');
   GamePathPage.Buttons[0].OnClick := @GamePathBrowseClick;
+
+  // El mismo aviso, debajo del campo, y atento a lo que se escriba: aqui la
+  // carpeta puede cambiar sin salir de la pagina.
+  GamePathPatchedLabel := TNewStaticText.Create(GamePathPage);
+  with GamePathPatchedLabel do
+  begin
+    Parent := GamePathPage.Surface;
+    AutoSize := False;
+    WordWrap := True;
+    Left := 0;
+    Top := GamePathPage.Edits[0].Top + GamePathPage.Edits[0].Height + ScaleY(12);
+    Width := GamePathPage.SurfaceWidth;
+    Caption := CustomMessage('AlreadyPatched1') + ' ' + CustomMessage('AlreadyPatched2');
+    AdjustHeight;
+    Font.Color := $0020A5DA;
+    Visible := False;
+  end;
+
+  // Se engancha antes de rellenar el campo a proposito: asi la primera lectura
+  // del archivo ocurre aqui, con el asistente aun abriendose, y la pagina de la
+  // carpeta se muestra luego sin esperar a nada.
+  GamePathPage.Edits[0].OnChange := @GamePathEditChange;
 
   // Se rellena con la carpeta detectada para que el usuario no tenga que
   // buscarla; si no hay ninguna, se deja la ruta habitual como pista.
@@ -860,7 +1009,17 @@ end;
 
 procedure CurPageChanged(CurPageID: Integer);
 begin
-  if CurPageID = wpFinished then
+  if CurPageID = CleanInstallPage.ID then
+  begin
+    ForgetPatchCheck;
+    UpdateCleanPageWarning;
+  end
+  else if CurPageID = GamePathPage.ID then
+  begin
+    ForgetPatchCheck;
+    UpdateGamePathWarning;
+  end
+  else if CurPageID = wpFinished then
   begin
     WizardForm.FinishedHeadingLabel.Caption := CustomMessage('FinishedHeadingLabel1');
     WizardForm.FinishedLabel.Caption := FinishedText;
