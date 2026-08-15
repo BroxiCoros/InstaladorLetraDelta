@@ -8,7 +8,7 @@ namespace InstaladorLetraDelta;
 
 public partial class MainWindow : Window
 {
-    private enum Pagina { Bienvenida, Opciones, Carpeta, Progreso, Resultado }
+    private enum Pagina { Bienvenida, Limpieza, Opciones, Carpeta, Progreso, Resultado }
 
     private Pagina _pagina = Pagina.Bienvenida;
     private bool _instalacionCorrecta;
@@ -18,6 +18,8 @@ public partial class MainWindow : Window
     {
         AvaloniaXamlLoader.Load(this);
 
+        TextosDePlataforma();
+
         // Si se encuentra el juego, la casilla de la carpeta viene rellena; si
         // no, se deja vacía para que el usuario la indique a mano.
         string carpetaJuego = Steam.Detectar();
@@ -25,6 +27,25 @@ public partial class MainWindow : Window
             this.FindControl<TextBox>("CampoCarpeta").Text = carpetaJuego;
 
         MostrarPagina(Pagina.Bienvenida);
+    }
+
+    /// <summary>
+    /// Los textos que hablan de dónde vive el juego cambian según la
+    /// plataforma: en Linux se ejecuta con Proton sobre los archivos de
+    /// Windows, y en macOS los archivos están dentro del paquete de la
+    /// aplicación y ni siquiera se llaman igual.
+    /// </summary>
+    private void TextosDePlataforma()
+    {
+        bool mac = OperatingSystem.IsMacOS();
+
+        this.FindControl<TextBlock>("NotaPlataforma").Text = mac
+            ? "En macOS los archivos del juego viven dentro de «DELTARUNE.app». El instalador los localiza solo; no hace falta que entres ahí."
+            : "En Linux el juego funciona con Proton, pero los archivos del juego son los mismos que en Windows y el parche se aplica igual.";
+
+        this.FindControl<TextBlock>("AyudaCarpeta").Text = mac
+            ? "Selecciona la carpeta «DELTARUNE», la que contiene «DELTARUNE.app»."
+            : "Selecciona la carpeta que contiene «DELTARUNE.exe» y las carpetas «chapter1_windows» … «chapter5_windows».";
     }
 
     // ---------------------------------------------------------------
@@ -36,6 +57,7 @@ public partial class MainWindow : Window
         _pagina = pagina;
 
         this.FindControl<StackPanel>("PaginaBienvenida").IsVisible = pagina == Pagina.Bienvenida;
+        this.FindControl<StackPanel>("PaginaLimpieza").IsVisible = pagina == Pagina.Limpieza;
         this.FindControl<StackPanel>("PaginaOpciones").IsVisible = pagina == Pagina.Opciones;
         this.FindControl<StackPanel>("PaginaCarpeta").IsVisible = pagina == Pagina.Carpeta;
         this.FindControl<StackPanel>("PaginaProgreso").IsVisible
@@ -52,6 +74,12 @@ public partial class MainWindow : Window
             case Pagina.Bienvenida:
                 titulo.Text = "Bienvenido al asistente de instalación de LetraDelta";
                 subtitulo.Text = "Traducción al español americano de DELTARUNE";
+                break;
+
+            case Pagina.Limpieza:
+                titulo.Text = "Antes de empezar";
+                subtitulo.Text = "Requisitos de la instalación";
+                ComprobarInstalacionPrevia();
                 break;
 
             case Pagina.Opciones:
@@ -78,7 +106,7 @@ public partial class MainWindow : Window
                 break;
         }
 
-        atras.IsVisible = pagina is Pagina.Opciones or Pagina.Carpeta;
+        atras.IsVisible = pagina is Pagina.Limpieza or Pagina.Opciones or Pagina.Carpeta;
         cancelar.IsVisible = pagina != Pagina.Resultado;
         siguiente.IsVisible = pagina != Pagina.Progreso;
         siguiente.Content = pagina switch
@@ -99,6 +127,9 @@ public partial class MainWindow : Window
         switch (_pagina)
         {
             case Pagina.Bienvenida:
+                MostrarPagina(Pagina.Limpieza);
+                break;
+            case Pagina.Limpieza:
                 MostrarPagina(Pagina.Opciones);
                 break;
             case Pagina.Opciones:
@@ -115,10 +146,43 @@ public partial class MainWindow : Window
 
     private void AlAtras(object remitente, RoutedEventArgs e)
     {
-        if (_pagina == Pagina.Opciones)
+        if (_pagina == Pagina.Limpieza)
             MostrarPagina(Pagina.Bienvenida);
+        else if (_pagina == Pagina.Opciones)
+            MostrarPagina(Pagina.Limpieza);
         else if (_pagina == Pagina.Carpeta)
             MostrarPagina(Pagina.Opciones);
+    }
+
+    /// <summary>
+    /// Refuerza el aviso cuando se puede detectar que la traducción ya está
+    /// puesta: el pack crea una carpeta `lang/` en la raíz del juego, y el
+    /// juego de fábrica no la trae (comprobado en las versiones de Windows y
+    /// de macOS).
+    ///
+    /// Es solo un refuerzo, no un sustituto del texto de esta página: detecta
+    /// ESTA traducción y ninguna otra. Cualquier otro parche o traducción deja
+    /// el juego igual de sucio y aquí no se ve, así que el aviso general tiene
+    /// que seguir estando para todo el mundo.
+    /// </summary>
+    private void ComprobarInstalacionPrevia()
+    {
+        var aviso = this.FindControl<TextBlock>("AvisoInstalacionPrevia");
+        string carpeta = this.FindControl<TextBox>("CampoCarpeta").Text ?? "";
+
+        bool yaInstalada = !string.IsNullOrWhiteSpace(carpeta)
+                           && Juego.EsInstalacionValida(carpeta)
+                           && Directory.Exists(Path.Combine(carpeta, "lang"));
+
+        aviso.IsVisible = yaInstalada;
+        if (yaInstalada)
+        {
+            aviso.Text = "Parece que esta traducción ya está instalada en tu copia del juego. "
+                       + "Verifica la integridad de los archivos en Steam antes de continuar: "
+                       + "aplicar el parche sobre un juego ya parcheado puede dejarlo a medias "
+                       + "sin dar ningún error.";
+            aviso.Foreground = Brushes.Goldenrod;
+        }
     }
 
     private void AlCancelar(object remitente, RoutedEventArgs e)

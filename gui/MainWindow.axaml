@@ -37,29 +37,42 @@
         </StackPanel>
         <TextBlock Text="La traducción se aplicará sobre tu instalación actual del juego. Las partidas guardadas no se verán afectadas."
                    TextWrapping="Wrap" Margin="0,6,0,0" />
-        <Border CornerRadius="4" Padding="10" Margin="0,4,0,0" BorderThickness="1"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-          <StackPanel Spacing="4">
-            <TextBlock Text="Antes de empezar" FontWeight="SemiBold" />
-            <TextBlock Text="Debe ser una copia limpia del juego, sin otros parches ni traducciones instalados antes. Si ya habías aplicado alguno, o no lo recuerdas, verifica la integridad de los archivos en Steam antes de continuar."
-                       TextWrapping="Wrap" />
-          </StackPanel>
-        </Border>
-        <TextBlock Text="En Linux el juego funciona con Proton, pero los archivos del juego son los mismos que en Windows y el parche se aplica igual."
+        <TextBlock x:Name="NotaPlataforma"
                    TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,2,0,0" />
       </StackPanel>
 
-      <!-- 2. Opciones -->
+      <!-- 2. Antes de empezar
+           Tiene página propia, igual que en el instalador de Windows (wpClean
+           en setup.iss). Estuvo metida en un recuadro de la bienvenida, y ahí
+           compartía pantalla con el resto del texto y se pasaba por alto: es
+           el aviso que evita parchear un juego ya parcheado, que produce un
+           resultado corrupto SIN QUE EL PARCHEADOR SE QUEJE. -->
+      <StackPanel x:Name="PaginaLimpieza" Spacing="10" IsVisible="False">
+        <TextBlock Text="La traducción debe aplicarse sobre una copia limpia del juego, sin otros parches ni traducciones instalados antes."
+                   TextWrapping="Wrap" />
+        <TextBlock Text="Si ya habías aplicado algún parche, o no lo recuerdas, verifica la integridad de los archivos en Steam antes de continuar:"
+                   TextWrapping="Wrap" Margin="0,6,0,0" />
+        <Border CornerRadius="4" Padding="10" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <TextBlock Text="Clic derecho sobre DELTARUNE → «Propiedades» → «Archivos instalados» → «Verificar la integridad de los archivos del juego»"
+                     TextWrapping="Wrap" />
+        </Border>
+        <TextBlock Text="Steam restaura los originales y la instalación parte de cero."
+                   TextWrapping="Wrap" />
+        <TextBlock x:Name="AvisoInstalacionPrevia" TextWrapping="Wrap" FontSize="12"
+                   IsVisible="False" Margin="0,6,0,0" />
+      </StackPanel>
+
+      <!-- 3. Opciones -->
       <StackPanel x:Name="PaginaOpciones" Spacing="6" IsVisible="False">
         <CheckBox x:Name="CasillaBordes" Content="Instalar versión con bordes (NXRUNE)" />
         <TextBlock Text="Añade los bordes decorativos de las versiones de consola. Variante visual basada en NXRUNE."
                    TextWrapping="Wrap" Margin="26,0,0,0" Opacity="0.7" FontSize="12" />
       </StackPanel>
 
-      <!-- 3. Carpeta del juego -->
+      <!-- 4. Carpeta del juego -->
       <StackPanel x:Name="PaginaCarpeta" Spacing="10" IsVisible="False">
-        <TextBlock Text="Selecciona la carpeta que contiene «DELTARUNE.exe» y las carpetas «chapter1_windows» … «chapter5_windows»."
-                   TextWrapping="Wrap" />
+        <TextBlock x:Name="AyudaCarpeta" TextWrapping="Wrap" />
         <DockPanel Margin="0,6,0,0">
           <Button DockPanel.Dock="Right" Content="Examinar…" Width="110" Margin="8,0,0,0"
                   Click="AlExaminar" />
@@ -68,7 +81,7 @@
         <TextBlock x:Name="AvisoCarpeta" TextWrapping="Wrap" FontSize="12" />
       </StackPanel>
 
-      <!-- 4. Progreso y resultado -->
+      <!-- 5. Progreso y resultado -->
       <StackPanel x:Name="PaginaProgreso" Spacing="12" IsVisible="False">
         <TextBlock x:Name="TextoProgreso" TextWrapping="Wrap" />
         <ProgressBar x:Name="BarraProgreso" Height="6" Minimum="0" Maximum="100" />
