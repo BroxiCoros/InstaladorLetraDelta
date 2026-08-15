@@ -174,7 +174,7 @@ end;
 // de discos secundarios. Sin leer ese archivo, una instalacion en
 // D:\SteamLibrary no se encuentra nunca, que es el caso mas comun despues
 // del predeterminado. La logica es la misma que usa el instalador de Linux
-// (ver linux/InstaladorLetraDelta/Steam.cs).
+// (ver gui/Steam.cs).
 
 // Devuelve la cadena entrecomillada numero Index (base 0) de una linea del
 // VDF, o vacio si no hay tantas. Basta con esto para leer el archivo: no

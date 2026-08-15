@@ -6,7 +6,7 @@
 # los mete en un AppDir junto al icono y el .desktop, y llama a appimagetool.
 #
 # Se usa igual en local y en CI. Sin argumentos:
-#   ./linux/packaging/build-appimage.sh
+#   ./packaging/linux/build-appimage.sh
 #
 # El resultado queda en la carpeta Output/ de la raíz del repositorio, igual
 # que hace Inno Setup con el instalador de Windows.
@@ -14,13 +14,13 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-PACKAGING_DIR="$REPO_ROOT/linux/packaging"
-BUILD_DIR="$REPO_ROOT/linux/build"
+PACKAGING_DIR="$REPO_ROOT/packaging/linux"
+BUILD_DIR="$REPO_ROOT/build"
 APPDIR="$BUILD_DIR/AppDir"
 OUTPUT_DIR="$REPO_ROOT/Output"
 OUTPUT_NAME="InstaladorLetraDelta-x86_64.AppImage"
 
-GUI_PROJECT="$REPO_ROOT/linux/InstaladorLetraDelta/InstaladorLetraDelta.csproj"
+GUI_PROJECT="$REPO_ROOT/gui/InstaladorLetraDelta.csproj"
 CLI_PROJECT="$REPO_ROOT/DeltaPatcherCLI/DeltaPatcher/DeltaPatcherCLI.csproj"
 APKTOOL_JAR="$REPO_ROOT/DeltaPatcherCLI/DeltaPatcher/apktool.jar"
 

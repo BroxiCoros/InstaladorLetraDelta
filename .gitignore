@@ -5,7 +5,7 @@ publish*/
 
 # Salida de Inno Setup y del empaquetado del AppImage
 Output/
-linux/build/
+build/
 
 # Descargado por el workflow de CI, no se versiona
 DeltaPatcherCLI/DeltaPatcher/apktool.jar

@@ -146,7 +146,7 @@ jobs:
         # dice otra cosa es peor que no publicar nada.
         run: |
           iss=$(grep -oP '^AppVersion=\K.*' setup.iss)
-          csproj=$(grep -oP '<Version>\K[^<]+' linux/InstaladorLetraDelta/InstaladorLetraDelta.csproj)
+          csproj=$(grep -oP '<Version>\K[^<]+' gui/InstaladorLetraDelta.csproj)
           echo "setup.iss=$iss  csproj=$csproj  ref=$GITHUB_REF_NAME"
 
           if [ "$iss" != "$csproj" ]; then
@@ -173,7 +173,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends imagemagick desktop-file-utils
 
       - name: Construir el AppImage
-        run: bash linux/packaging/build-appimage.sh
+        run: bash packaging/linux/build-appimage.sh
 
       - name: Comprobar que el AppImage arranca
         # Sin escritorio no se puede abrir la ventana, pero sí verificar que el
