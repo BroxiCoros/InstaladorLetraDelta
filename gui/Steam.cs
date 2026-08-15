@@ -8,20 +8,29 @@ namespace InstaladorLetraDelta;
 public static class Steam
 {
     /// <summary>
-    /// Raíces donde puede vivir una instalación de Steam. Se comprueban todas
-    /// porque conviven con frecuencia: el paquete nativo usa las tres primeras
-    /// (normalmente enlaces entre sí) y Flatpak las dos últimas. La ruta de
-    /// Flatpak cambió de `.local/share/Steam` a `data/Steam`, así que se
-    /// buscan ambas para no dejar fuera instalaciones antiguas.
+    /// Raíces donde puede vivir una instalación de Steam. En Linux se
+    /// comprueban todas porque conviven con frecuencia: el paquete nativo usa
+    /// las tres primeras (normalmente enlaces entre sí) y Flatpak las dos
+    /// últimas. La ruta de Flatpak cambió de `.local/share/Steam` a
+    /// `data/Steam`, así que se buscan ambas para no dejar fuera instalaciones
+    /// antiguas.
+    ///
+    /// En macOS solo hay un sitio posible: Steam se instala como aplicación y
+    /// guarda su biblioteca en la carpeta de soporte del usuario.
     /// </summary>
-    private static readonly string[] RaicesCandidatas =
-    [
-        ".local/share/Steam",
-        ".steam/steam",
-        ".steam/root",
-        ".var/app/com.valvesoftware.Steam/data/Steam",
-        ".var/app/com.valvesoftware.Steam/.local/share/Steam",
-    ];
+    private static string[] RaicesCandidatas => OperatingSystem.IsMacOS()
+        ?
+        [
+            "Library/Application Support/Steam",
+        ]
+        :
+        [
+            ".local/share/Steam",
+            ".steam/steam",
+            ".steam/root",
+            ".var/app/com.valvesoftware.Steam/data/Steam",
+            ".var/app/com.valvesoftware.Steam/.local/share/Steam",
+        ];
 
     /// <summary>
     /// Carpetas donde Steam ha guardado el `libraryfolders.vdf`. Desde 2021
@@ -99,32 +108,23 @@ public static class Steam
     /// <summary>
     /// Busca DELTARUNE en todas las bibliotecas y devuelve la carpeta de la
     /// primera instalación válida, o null si no hay ninguna.
+    ///
+    /// Lo que devuelve es la carpeta que contiene los datos, no la que Steam
+    /// llama DELTARUNE: en macOS los archivos van dentro del paquete de la
+    /// aplicación, y de eso se encarga <see cref="Juego.Normalizar"/>.
     /// </summary>
     public static string Detectar()
     {
         foreach (string biblioteca in Bibliotecas())
         {
-            string juego = Path.Combine(biblioteca, "steamapps", "common", "DELTARUNE");
-            if (EsInstalacionValida(juego))
+            string juego = Juego.Normalizar(
+                Path.Combine(biblioteca, "steamapps", "common", "DELTARUNE"));
+
+            if (Juego.EsInstalacionValida(juego))
                 return juego;
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// Comprueba que la carpeta contenga realmente el juego completo. Se exige
-    /// lo mismo que el instalador de Windows (ver setup.iss, CheckDeltaruneLoc):
-    /// el ejecutable y el data.win del último capítulo, para descartar
-    /// instalaciones a medio descargar.
-    /// </summary>
-    public static bool EsInstalacionValida(string carpetaJuego)
-    {
-        if (string.IsNullOrEmpty(carpetaJuego))
-            return false;
-
-        return File.Exists(Path.Combine(carpetaJuego, "DELTARUNE.exe"))
-            && File.Exists(Path.Combine(carpetaJuego, "chapter5_windows", "data.win"));
     }
 
     /// <summary>

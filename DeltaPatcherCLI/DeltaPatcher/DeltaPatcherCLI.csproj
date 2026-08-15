@@ -5,10 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <!-- RID objetivo. La compilación es multiplataforma: el instalador de
-         Windows publica con -r win-x64 y el de Linux con -r linux-x64. Si no
-         se indica ninguno (compilación local de desarrollo), se toma el del
-         sistema anfitrión. -->
-    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+         Windows publica con -r win-x64, el de Linux con -r linux-x64 y el de
+         macOS con -r osx-arm64 / osx-x64. Si no se indica ninguno
+         (compilación local de desarrollo), se toma el del sistema anfitrión. -->
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' == 'Windows_NT'">win-x64</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' != 'Windows_NT'">linux-x64</RuntimeIdentifier>
     <IsWindowsBuild>$(RuntimeIdentifier.StartsWith('win'))</IsWindowsBuild>

@@ -23,6 +23,10 @@ class Program
     private static bool writeOutputToFile = true;
     private static bool droid = false;
     private static bool borders = false;
+    // Disposición de los archivos del juego. La rellena ValidatePaths a partir
+    // de lo que hay en la carpeta; con --droid no se usa (los APK de DeltaQuick
+    // llevan su propio game.droid dentro).
+    private static GameLayout layout;
 
     private static async Task Main(string[] args)
     {
@@ -56,9 +60,13 @@ class Program
                 WriteLine(LocalizedText.Usage2);
                 WriteLine();
                 WriteLine(LocalizedText.Usage3);
-                WriteLine(OperatingSystem.IsWindows()
-                    ? "DeltaPatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\""
-                    : "./DeltaPatcherCLI --game ~/.local/share/Steam/steamapps/common/DELTARUNE --scripts /tmp/scripts");
+                if (OperatingSystem.IsWindows())
+                    WriteLine("DeltaPatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\"");
+                else if (OperatingSystem.IsMacOS())
+                    // En macOS los datos van dentro del paquete de la aplicación.
+                    WriteLine("./DeltaPatcherCLI --game \"$HOME/Library/Application Support/Steam/steamapps/common/DELTARUNE/DELTARUNE.app/Contents/Resources\" --scripts /tmp/scripts");
+                else
+                    WriteLine("./DeltaPatcherCLI --game ~/.local/share/Steam/steamapps/common/DELTARUNE --scripts /tmp/scripts");
                 Environment.Exit(0);
             }
 
@@ -82,7 +90,7 @@ class Program
                                     ConsoleQuickEditSwitcher.SwitchQuickMode(false);
 
             if (!droid) {
-                await ApplyChapterPatch(gamePath, scriptsPath, "Menu", "data.win");
+                await ApplyChapterPatch(gamePath, scriptsPath, "Menu", layout.MenuData);
 
                 // Para los capítulos que soportan borders, cuando --borders está activo
                 // corremos Fix.csx y Borders.csx sobre el MISMO objeto Data (sin guardado
@@ -91,14 +99,6 @@ class Program
                 // resuelva funciones/variables de obj_time_Draw_77 de manera diferente
                 // a como lo hace en el flujo manual de UTMT.
                 string[] chapterNames  = { "Chapter1", "Chapter2", "Chapter3", "Chapter4", "Chapter5" };
-                string[] chapterDataWins =
-                {
-                    Path.Combine("chapter1_windows", "data.win"),
-                    Path.Combine("chapter2_windows", "data.win"),
-                    Path.Combine("chapter3_windows", "data.win"),
-                    Path.Combine("chapter4_windows", "data.win"),
-                    Path.Combine("chapter5_windows", "data.win"),
-                };
                 for (int ci = 0; ci < chapterNames.Length; ci++)
                 {
                     string borderScript = null;
@@ -109,7 +109,7 @@ class Program
                             borderScript = candidate;
                     }
                     await ApplyChapterPatch(gamePath, scriptsPath, chapterNames[ci],
-                                            chapterDataWins[ci], secondScriptPath: borderScript);
+                                            layout.ChapterData(ci + 1), secondScriptPath: borderScript);
                 }
             } else {
                  Apk.ExtractEmbeddedJar("apktool.jar");
@@ -258,9 +258,17 @@ class Program
                 WriteLine(LocalizedText.ValidatePath5);                    return false;
             }
 
-            if (!File.Exists(Path.Combine(gamePath, "DELTARUNE.exe")) && !droid)
+            if (!droid)
             {
-                WriteLine(LocalizedText.ValidatePath6);                    return false;
+                // La disposición (Windows o macOS) se deduce aquí y se guarda:
+                // es también la comprobación de que en esa carpeta hay un juego.
+                layout = GameLayout.Detect(gamePath);
+                if (layout is null)
+                {
+                    WriteLine(LocalizedText.ValidatePath6);                    return false;
+                }
+
+                WriteLine($"{LocalizedText.ValidatePath9} {layout.Name}");
             }
 
             WriteLine(LocalizedText.ValidatePath7);             return true;

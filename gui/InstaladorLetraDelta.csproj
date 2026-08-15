@@ -11,10 +11,15 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
 
-    <!-- El AppImage se monta en solo lectura y trae dentro su propio runtime,
-         así que se publica autocontenido pero sin archivo único: dentro del
-         AppDir no aporta nada y complica la depuración. -->
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <!-- Tanto el AppImage como el paquete de macOS traen dentro su propio
+         runtime, así que se publica autocontenido pero sin archivo único:
+         dentro del paquete no aporta nada y complica la depuración.
+
+         El RID lo fija el script de empaquetado de cada plataforma; aquí solo
+         se declara la lista y un valor por defecto para compilar en local. -->
+    <RuntimeIdentifiers>linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' AND $([MSBuild]::IsOSPlatform('OSX'))">osx-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">linux-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>

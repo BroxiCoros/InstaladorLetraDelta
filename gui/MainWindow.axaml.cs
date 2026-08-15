@@ -143,8 +143,11 @@ public partial class MainWindow : Window
             AllowMultiple = false,
         });
 
+        // En macOS el diálogo no deja entrar en DELTARUNE.app, así que lo que
+        // llega aquí suele ser la carpeta que lo contiene: Normalizar completa
+        // el resto del camino hasta los datos.
         if (carpetas.Count > 0)
-            this.FindControl<TextBox>("CampoCarpeta").Text = carpetas[0].Path.LocalPath;
+            this.FindControl<TextBox>("CampoCarpeta").Text = Juego.Normalizar(carpetas[0].Path.LocalPath);
     }
 
     private void AlCambiarCarpeta(object remitente, TextChangedEventArgs e) => ValidarCarpeta();
@@ -167,9 +170,24 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!Steam.EsInstalacionValida(carpeta))
+        // Si lo que hay escrito es la carpeta que contiene DELTARUNE.app (lo
+        // único que se puede elegir en el diálogo de macOS), se completa el
+        // camino hasta los datos. Al reescribir el campo se vuelve a entrar
+        // aquí, ya con la ruta buena, y esa segunda pasada no cambia nada.
+        string normalizada = Juego.Normalizar(carpeta);
+        if (normalizada != carpeta && Juego.EsInstalacionValida(normalizada))
         {
-            aviso.Text = "En esa carpeta no está DELTARUNE.exe junto a chapter5_windows/data.win.";
+            this.FindControl<TextBox>("CampoCarpeta").Text = normalizada;
+            return;
+        }
+
+        if (!Juego.EsInstalacionValida(carpeta))
+        {
+            // El nombre del archivo cambia según la plataforma del juego, así
+            // que se nombra el de esta para que el aviso sea comprobable.
+            aviso.Text = OperatingSystem.IsMacOS()
+                ? "En esa carpeta no está DELTARUNE. Indica la carpeta que contiene DELTARUNE.app."
+                : "En esa carpeta no está DELTARUNE: falta chapter5_windows/data.win.";
             aviso.Foreground = Brushes.IndianRed;
             siguiente.IsEnabled = false;
             return;

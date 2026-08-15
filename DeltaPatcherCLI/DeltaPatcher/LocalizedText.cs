@@ -21,7 +21,8 @@ namespace DeltaPatcherCLI {
         public const string ValidatePath3       = "- Carpeta de scripts:";
         public const string ValidatePath4       = "ERROR: no se encontró la carpeta del juego";
         public const string ValidatePath5       = "ERROR: no se encontró la carpeta de scripts";
-        public const string ValidatePath6       = "ERROR: no se encontró DELTARUNE.exe";
+        public const string ValidatePath6       = "ERROR: en esa carpeta no está DELTARUNE";
+        public const string ValidatePath9       = "- Disposición del juego:";
         public const string ValidatePath7       = "Todas las rutas son correctas.";
         public const string ValidatePath8       = "Error al comprobar las rutas:";
         public const string ApplyPatch1         = "PARCHEANDO:";
@@ -29,7 +30,7 @@ namespace DeltaPatcherCLI {
         public const string ApplyPatch3         = "- Script de parcheo:";
         public const string ApplyPatch4         = "Archivo del juego no encontrado:";
         public const string ApplyPatch5         = "Script de parcheo no encontrado:";
-        public const string ApplyPatch6         = "- Leyendo data.win...";
+        public const string ApplyPatch6         = "- Leyendo el archivo del juego...";
         public const string ApplyPatch7         = "- Ejecutando el script...";
         public const string ApplyPatch8         = "- Guardando los cambios...";
         public const string ApplyPatch9         = "se ha parcheado correctamente.";

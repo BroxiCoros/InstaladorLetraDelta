@@ -176,13 +176,16 @@ public sealed class Instalador
     private static string Megas(long bytes) => $"{bytes / 1024.0 / 1024.0:F1} MB";
 
     /// <summary>
-    /// Descomprime un .7z con el 7-Zip que viaja dentro del AppImage.
+    /// Descomprime un .7z con el 7-Zip que viaja dentro del instalador: `7zzs`
+    /// (el binario estático de Linux, dentro del AppImage) o `7zz` (el binario
+    /// universal de macOS, dentro del paquete de la aplicación).
     /// </summary>
     private static async Task DescomprimirAsync(string archivo, string destino, CancellationToken ct)
     {
         Directory.CreateDirectory(destino);
 
-        string sieteZip = Path.Combine(AppContext.BaseDirectory, "7zzs");
+        string sieteZip = Path.Combine(AppContext.BaseDirectory,
+                                       OperatingSystem.IsMacOS() ? "7zz" : "7zzs");
         var (codigo, salida) = await EjecutarAsync(sieteZip, ["x", archivo, "-o" + destino, "-y"], ct);
 
         if (codigo != 0)
@@ -287,15 +290,33 @@ public sealed class Instalador
     }
 
     /// <summary>
-    /// Carpeta donde está el instalador. Dentro de un AppImage hay que mirar la
-    /// variable APPIMAGE: el binario en sí vive en el punto de montaje temporal,
-    /// no donde el usuario dejó el archivo.
+    /// Carpeta donde el usuario dejó el instalador, que es donde se buscan los
+    /// packs para la instalación sin conexión. No sirve la carpeta del binario:
+    /// en las dos plataformas está enterrado dentro del paquete.
+    ///
+    /// En Linux hay que mirar la variable APPIMAGE, porque el binario vive en
+    /// el punto de montaje temporal del AppImage y no donde está el archivo.
+    /// En macOS el binario está en `InstaladorLetraDelta.app/Contents/MacOS/`,
+    /// así que la carpeta que le interesa al usuario son tres niveles arriba.
     /// </summary>
     public static string CarpetaDelInstalador()
     {
         string appImage = Environment.GetEnvironmentVariable("APPIMAGE");
         if (!string.IsNullOrEmpty(appImage))
             return Path.GetDirectoryName(Path.GetFullPath(appImage)) ?? AppContext.BaseDirectory;
+
+        if (OperatingSystem.IsMacOS())
+        {
+            // .../InstaladorLetraDelta.app/Contents/MacOS/ -> .../
+            var macOS = new DirectoryInfo(AppContext.BaseDirectory);
+            DirectoryInfo paquete = macOS.Parent?.Parent;
+            if (paquete is not null &&
+                paquete.Name.EndsWith(".app", StringComparison.OrdinalIgnoreCase) &&
+                paquete.Parent is not null)
+            {
+                return paquete.Parent.FullName;
+            }
+        }
 
         return AppContext.BaseDirectory;
     }
