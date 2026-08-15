@@ -60,6 +60,78 @@ public sealed class Juego
         Detectar(carpetaJuego) != null;
 
     /// <summary>
+    /// Nombre de una función que solo existe en el juego ya parcheado: la
+    /// añade el mod. Comprobado contra los archivos originales de Windows y de
+    /// macOS, donde no aparece ninguna vez.
+    /// </summary>
+    private static readonly byte[] FirmaDelParche = "scr_lang_load"u8.ToArray();
+
+    /// <summary>
+    /// Si el juego ya lleva la traducción puesta.
+    ///
+    /// Se busca la firma DENTRO del archivo de datos, y no la carpeta `lang/`
+    /// que crea el pack, por un motivo concreto: «Verificar la integridad de
+    /// los archivos» de Steam restaura los archivos del juego, pero no borra
+    /// los que sobran, así que `lang/` sobrevive a la limpieza. Mirar ahí
+    /// delataría para siempre a cualquiera que hubiera instalado la traducción
+    /// una vez, incluso después de dejar el juego impecable, y un aviso que
+    /// sale siempre no lo lee nadie. El archivo de datos, en cambio, sí lo
+    /// restaura Steam: el aviso desaparece justo cuando debe.
+    ///
+    /// Solo detecta ESTA traducción. Cualquier otro parche deja el juego igual
+    /// de sucio y aquí no se ve, así que el aviso general de la página no
+    /// sobra: esto lo refuerza cuando se puede, nada más.
+    /// </summary>
+    public static bool YaTraducido(string carpetaJuego)
+    {
+        Juego disposicion = Detectar(carpetaJuego);
+        if (disposicion is null)
+            return false;
+
+        // El del menú es el más pequeño de los seis (unos 3 MB), y el mod lo
+        // toca igual que a los capítulos.
+        string datos = Path.Combine(carpetaJuego, disposicion.ArchivoDatos);
+
+        try
+        {
+            using FileStream flujo = File.OpenRead(datos);
+            return ContieneFirma(flujo, FirmaDelParche);
+        }
+        catch (IOException)
+        {
+            // Si no se puede leer, no se afirma nada: el aviso es una ayuda,
+            // no una comprobación de la que dependa la instalación.
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Busca una secuencia de bytes en un flujo, leyendo por bloques y
+    /// solapándolos para no perder una coincidencia partida entre dos.
+    /// </summary>
+    private static bool ContieneFirma(Stream flujo, byte[] firma)
+    {
+        int solape = firma.Length - 1;
+        var bufer = new byte[81920 + solape];
+        int guardados = 0;
+
+        while (true)
+        {
+            int leidos = flujo.Read(bufer, guardados, bufer.Length - guardados);
+            if (leidos <= 0)
+                return false;
+
+            int disponibles = guardados + leidos;
+            if (bufer.AsSpan(0, disponibles).IndexOf(firma) >= 0)
+                return true;
+
+            // La cola se conserva al principio del siguiente bloque.
+            bufer.AsSpan(disponibles - solape, solape).CopyTo(bufer);
+            guardados = solape;
+        }
+    }
+
+    /// <summary>
     /// Lleva una ruta escrita o elegida por el usuario hasta la carpeta que
     /// contiene de verdad los datos.
     ///

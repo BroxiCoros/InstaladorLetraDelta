@@ -156,23 +156,15 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Refuerza el aviso cuando se puede detectar que la traducción ya está
-    /// puesta: el pack crea una carpeta `lang/` en la raíz del juego, y el
-    /// juego de fábrica no la trae (comprobado en las versiones de Windows y
-    /// de macOS).
-    ///
-    /// Es solo un refuerzo, no un sustituto del texto de esta página: detecta
-    /// ESTA traducción y ninguna otra. Cualquier otro parche o traducción deja
-    /// el juego igual de sucio y aquí no se ve, así que el aviso general tiene
-    /// que seguir estando para todo el mundo.
+    /// puesta. La comprobación mira dentro del archivo de datos, no la carpeta
+    /// `lang/`: ver <see cref="Juego.YaTraducido"/> para por qué importa.
     /// </summary>
     private void ComprobarInstalacionPrevia()
     {
         var aviso = this.FindControl<TextBlock>("AvisoInstalacionPrevia");
         string carpeta = this.FindControl<TextBox>("CampoCarpeta").Text ?? "";
 
-        bool yaInstalada = !string.IsNullOrWhiteSpace(carpeta)
-                           && Juego.EsInstalacionValida(carpeta)
-                           && Directory.Exists(Path.Combine(carpeta, "lang"));
+        bool yaInstalada = Juego.YaTraducido(carpeta);
 
         aviso.IsVisible = yaInstalada;
         if (yaInstalada)
