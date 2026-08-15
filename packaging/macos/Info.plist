@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Instalador LetraDelta</string>
+	<key>CFBundleDisplayName</key>
+	<string>Instalador LetraDelta</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.broxicoros.instaladorletradelta</string>
+	<key>CFBundleExecutable</key>
+	<string>InstaladorLetraDelta</string>
+	<key>CFBundleIconFile</key>
+	<string>letradelta.icns</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<!-- Las dos versiones las reescribe build-app.sh con la de setup.iss. -->
+	<key>CFBundleShortVersionString</key>
+	<string>0.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<!-- El juego más antiguo que soporta Steam en Mac pide bastante más que
+	     esto, pero .NET 10 no arranca por debajo de la 12. -->
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<!-- El instalador no tiene nada que hacer en segundo plano ni sin ventana. -->
+	<key>LSBackgroundOnly</key>
+	<false/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2026 BroxiCoros</string>
+</dict>
+</plist>

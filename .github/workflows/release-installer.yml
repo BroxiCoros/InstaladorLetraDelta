@@ -12,9 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-# Cada plataforma se compila por su cuenta y un tercer job publica las dos
-# juntas. Así una sola etiqueta produce una única Release con el .exe y el
-# AppImage, en vez de dos publicaciones separadas que se pisarían.
+# Cada plataforma se compila por su cuenta y un último job publica todas
+# juntas. Así una sola etiqueta produce una única Release con el .exe, el
+# AppImage y los dos .dmg, en vez de publicaciones separadas que se pisarían.
 jobs:
 
   # ---------------------------------------------------------------------
@@ -195,10 +195,60 @@ jobs:
           if-no-files-found: error
 
   # ---------------------------------------------------------------------
+  # macOS: un .dmg por arquitectura
+  # ---------------------------------------------------------------------
+  # Se compilan las dos por separado porque .NET no produce un binario
+  # universal: cada runner compila de forma nativa la suya. `macos-latest` es
+  # Apple Silicon y `macos-15-intel` es el último runner de Intel que queda.
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            rid: osx-arm64
+            arch: arm64
+          - runner: macos-15-intel
+            rid: osx-x64
+            arch: x64
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Clonado del repositorio
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Configuración del SDK de .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Construir el paquete y el DMG
+        run: bash packaging/macos/build-app.sh ${{ matrix.rid }}
+
+      - name: Comprobar que el paquete arranca
+        # Sin escritorio no se puede abrir la ventana, pero sí verificar que la
+        # firma ad hoc es válida (sin ella el binario no se ejecutaría en Apple
+        # Silicon) y que los binarios que viajan dentro responden.
+        run: |
+          codesign --verify --deep --strict --verbose=2 build/InstaladorLetraDelta.app
+          ./build/InstaladorLetraDelta.app/Contents/MacOS/DeltaPatcherCLI | head -5
+          ./build/InstaladorLetraDelta.app/Contents/MacOS/7zz | head -2
+
+      - name: Subir el DMG como artefacto
+        uses: actions/upload-artifact@v7
+        with:
+          name: instalador-macos-${{ matrix.arch }}
+          path: Output/InstaladorLetraDelta-${{ matrix.arch }}.dmg
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
   # Publicación conjunta (solo al etiquetar)
   # ---------------------------------------------------------------------
   publish:
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-macos]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -234,6 +284,10 @@ jobs:
              "Output/InstaladorLetraDelta-$version-Windows.exe"
           mv artefactos/instalador-linux/InstaladorLetraDelta-x86_64.AppImage \
              "Output/InstaladorLetraDelta-$version-Linux-x86_64.AppImage"
+          mv artefactos/instalador-macos-arm64/InstaladorLetraDelta-arm64.dmg \
+             "Output/InstaladorLetraDelta-$version-macOS-arm64.dmg"
+          mv artefactos/instalador-macos-x64/InstaladorLetraDelta-x64.dmg \
+             "Output/InstaladorLetraDelta-$version-macOS-Intel.dmg"
 
           ls -la Output
 

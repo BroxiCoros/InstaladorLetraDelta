@@ -1,6 +1,6 @@
 # LetraDelta — Instalador
 
-Instalador para Windows y Linux de la traducción al español americano de **DELTARUNE** (proyecto [*LetraDelta*](https://github.com/BroxiCoros/LetraDelta)). Aplica el mod [*Deltranslate*](https://github.com/BroxiCoros/DeltranslatePatch) y los archivos de idioma sobre tu copia del juego en uno o dos clics.
+Instalador para Windows, Linux y macOS de la traducción al español americano de **DELTARUNE** (proyecto [*LetraDelta*](https://github.com/BroxiCoros/LetraDelta)). Aplica el mod [*Deltranslate*](https://github.com/BroxiCoros/DeltranslatePatch) y los archivos de idioma sobre tu copia del juego en uno o dos clics.
 
 ---
 
@@ -71,6 +71,35 @@ Igual que en Windows: si dejas `lang_es.7z` o `scripts.7z` en la misma carpeta q
 
 ---
 
+## Instalación (macOS)
+
+*DELTARUNE* tiene versión nativa para Mac, y la traducción se aplica sobre ella igual que en las demás plataformas. Los archivos del juego son distintos a los de Windows (viven dentro del propio `DELTARUNE.app` y se llaman de otra forma), pero el parche que se les aplica es exactamente el mismo.
+
+1. Descarga desde la sección de [*releases*](../../releases/latest) el archivo que corresponda a tu Mac:
+   - `InstaladorLetraDelta-<versión>-macOS-arm64.dmg` — Apple Silicon (M1 y posteriores).
+   - `InstaladorLetraDelta-<versión>-macOS-Intel.dmg` — Macs con procesador Intel.
+
+   Si no sabes cuál tienes: menú Apple → «Acerca de este Mac». Si donde pone «Chip» ves algo que empieza por «Apple M», es el primero.
+2. Abre el `.dmg` y **arrastra el instalador a la carpeta Aplicaciones**, como indica la ventana que aparece. Es importante: si lo abres directamente desde el `.dmg`, macOS lo ejecuta en una copia temporal de solo lectura y no encontrará los archivos que hayas dejado a su lado para la instalación sin conexión.
+3. La primera vez, ábrelo con **clic derecho → «Abrir»** y confirma en el aviso. Con doble clic, macOS lo bloquea.
+4. Sigue el asistente. Es el mismo recorrido que en Windows y Linux: bienvenida, opciones, carpeta del juego e instalación.
+
+El instalador **detecta la carpeta del juego automáticamente** en la biblioteca de Steam (`~/Library/Application Support/Steam`). Si tuvieras que indicarla a mano, selecciona la carpeta **`DELTARUNE`**: el diálogo de macOS no deja entrar dentro de `DELTARUNE.app`, así que el instalador completa por su cuenta el camino hasta los archivos.
+
+### ¿Por qué avisa de que no se puede comprobar el desarrollador?
+
+Porque el instalador no está firmado con un certificado de Apple, que es de pago y anual. El aviso no indica que haya nada malo en el archivo: macOS lo muestra con cualquier programa que no venga de la App Store o de un desarrollador registrado. Abrirlo con clic derecho → «Abrir» la primera vez es suficiente; a partir de ahí se abre con doble clic como cualquier otra aplicación.
+
+### Cómo revertir la traducción
+
+Igual que en las demás plataformas: en Steam, clic derecho sobre *DELTARUNE* → «Propiedades» → «Archivos instalados» → «Verificar la integridad de los archivos del juego».
+
+### Instalación sin conexión
+
+Igual que en Windows y Linux: si dejas `lang_es.7z` o `scripts.7z` en la misma carpeta donde está el instalador (fuera del `.dmg`, ver el paso 2), el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos.
+
+---
+
 ## Android (DeltaQuick)
 
 > **No disponible por ahora.** La casilla de DeltaQuick está oculta en el instalador, así que los pasos de esta sección no se pueden seguir con la versión actual. Se documentan aquí para cuando vuelva a activarse.
@@ -118,9 +147,9 @@ A **UnderminersTeam**, por [UndertaleModTool](https://github.com/UnderminersTeam
 
 A **iBotPeaches**, por [Apktool](https://github.com/iBotPeaches/Apktool), utilizado para parchear los APK de *DeltaQuick*.
 
-A **Igor Pavlov**, por [7-Zip](https://7-zip.org/), cuyo binario para Linux viaja dentro del AppImage para descomprimir los packs.
+A **Igor Pavlov**, por [7-Zip](https://7-zip.org/), cuyos binarios para Linux y macOS viajan dentro del instalador para descomprimir los packs.
 
-Al equipo de [**Avalonia**](https://avaloniaui.net/), con la que está hecho el asistente gráfico de Linux.
+Al equipo de [**Avalonia**](https://avaloniaui.net/), con la que está hecho el asistente gráfico de Linux y macOS.
 
 A **BroxiCoros**, traducción y mantenimiento de *LetraDelta* y este instalador.
 
