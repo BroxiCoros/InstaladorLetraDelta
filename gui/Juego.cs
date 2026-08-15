@@ -67,7 +67,7 @@ public sealed class Juego
     private static readonly byte[] FirmaDelParche = "scr_lang_load"u8.ToArray();
 
     /// <summary>
-    /// Si el juego ya lleva la traducción puesta.
+    /// Si el archivo de datos del juego ya está modificado por un parche.
     ///
     /// Se busca la firma DENTRO del archivo de datos, y no la carpeta `lang/`
     /// que crea el pack, por un motivo concreto: «Verificar la integridad de
@@ -78,11 +78,14 @@ public sealed class Juego
     /// sale siempre no lo lee nadie. El archivo de datos, en cambio, sí lo
     /// restaura Steam: el aviso desaparece justo cuando debe.
     ///
-    /// Solo detecta ESTA traducción. Cualquier otro parche deja el juego igual
-    /// de sucio y aquí no se ve, así que el aviso general de la página no
-    /// sobra: esto lo refuerza cuando se puede, nada más.
+    /// La firma es la del mod, así que un parche que no derive de él no se
+    /// detecta y el juego queda igual de sucio. Por eso el aviso general de la
+    /// página no sobra: esto lo refuerza cuando se puede, nada más. Y por eso
+    /// el texto que se le enseña al usuario habla de que el archivo está
+    /// modificado, sin nombrar esta traducción: lo que se sabe seguro es que
+    /// la copia no está limpia, no quién la ensució.
     /// </summary>
-    public static bool YaTraducido(string carpetaJuego)
+    public static bool YaParcheado(string carpetaJuego)
     {
         Juego disposicion = Detectar(carpetaJuego);
         if (disposicion is null)

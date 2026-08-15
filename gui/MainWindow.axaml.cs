@@ -155,23 +155,24 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Refuerza el aviso cuando se puede detectar que la traducción ya está
-    /// puesta. La comprobación mira dentro del archivo de datos, no la carpeta
-    /// `lang/`: ver <see cref="Juego.YaTraducido"/> para por qué importa.
+    /// Refuerza el aviso cuando se puede detectar que la copia no está limpia.
+    /// La comprobación mira dentro del archivo de datos, no la carpeta
+    /// `lang/`: ver <see cref="Juego.YaParcheado"/> para por qué importa.
     /// </summary>
     private void ComprobarInstalacionPrevia()
     {
         var aviso = this.FindControl<TextBlock>("AvisoInstalacionPrevia");
         string carpeta = this.FindControl<TextBox>("CampoCarpeta").Text ?? "";
 
-        bool yaInstalada = Juego.YaTraducido(carpeta);
+        bool yaParcheado = Juego.YaParcheado(carpeta);
 
-        aviso.IsVisible = yaInstalada;
-        if (yaInstalada)
+        aviso.IsVisible = yaParcheado;
+        if (yaParcheado)
         {
-            aviso.Text = "Esta copia del juego ya parece tener la traducción instalada. "
-                       + "Verifica la integridad de los archivos en Steam antes de continuar, "
-                       + "ya que aplicarla de nuevo puede causar problemas.";
+            aviso.Text = "El archivo de datos de esta copia del juego ya está modificado, así "
+                       + "que no es una copia limpia. Verifica la integridad de los archivos "
+                       + "en Steam antes de continuar, para que el parche se aplique sobre los "
+                       + "archivos originales.";
             aviso.Foreground = Brushes.Goldenrod;
         }
     }
@@ -257,11 +258,12 @@ public partial class MainWindow : Window
         //
         // Se lee un archivo de 3 MB, pero solo cuando la ruta ya es válida, o
         // sea un par de veces y no en cada tecla.
-        if (Juego.YaTraducido(carpeta))
+        if (Juego.YaParcheado(carpeta))
         {
-            aviso.Text = "Juego encontrado. La traducción ya parece estar instalada en esta copia: "
-                       + "verifica la integridad de los archivos en Steam antes de continuar, "
-                       + "ya que aplicarla de nuevo puede causar problemas.";
+            aviso.Text = "Juego encontrado, pero el archivo de datos ya está modificado: esta "
+                       + "copia no está limpia. Verifica la integridad de los archivos en Steam "
+                       + "antes de continuar, para que el parche se aplique sobre los archivos "
+                       + "originales.";
             aviso.Foreground = Brushes.Goldenrod;
             siguiente.IsEnabled = true;
             return;
