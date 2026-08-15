@@ -233,9 +233,26 @@ jobs:
         # firma ad hoc es válida (sin ella el binario no se ejecutaría en Apple
         # Silicon) y que los binarios que viajan dentro responden.
         run: |
-          codesign --verify --strict --verbose=2 build/InstaladorLetraDelta.app
+          codesign --verify --deep --strict --verbose=2 build/InstaladorLetraDelta.app
           ./build/InstaladorLetraDelta.app/Contents/MacOS/DeltaPatcherCLI | head -5
           ./build/InstaladorLetraDelta.app/Contents/MacOS/7zz | head -2
+
+      - name: Diagnóstico de la firma (solo si algo falló)
+        # La firma en macOS solo se puede probar en un Mac, así que cuando falla
+        # conviene volver con datos en vez de con otra suposición: qué firma
+        # tiene el paquete, qué opina Gatekeeper y qué hay dentro.
+        if: failure()
+        run: |
+          echo "--- codesign -dvvv del paquete ---"
+          codesign -dvvv build/InstaladorLetraDelta.app 2>&1 || true
+          echo "--- evaluación de Gatekeeper ---"
+          spctl --assess --type execute --verbose=4 build/InstaladorLetraDelta.app 2>&1 || true
+          echo "--- contenido de Contents/MacOS (recuento por tipo) ---"
+          find build/InstaladorLetraDelta.app/Contents/MacOS -type f | wc -l
+          find build/InstaladorLetraDelta.app/Contents/MacOS -name '*.dll' | wc -l
+          echo "--- estructura ---"
+          ls -la build/InstaladorLetraDelta.app/Contents
+          ls build/InstaladorLetraDelta.app/Contents/_CodeSignature 2>&1 || true
 
       - name: Subir el DMG como artefacto
         uses: actions/upload-artifact@v7
