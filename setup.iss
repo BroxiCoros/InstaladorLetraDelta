@@ -81,6 +81,9 @@ tr.ProgressPage3c=Descomprimiendo scripts...
 tr.ProgressPage3d=Aplicando el parche...
 tr.HandlePatcherError1=Error al aplicar el parche, código de error: 
 tr.HandlePatcherError2=No se pudo iniciar el parcheador.
+tr.HandlePatcherError2b=Windows no llegó a ejecutarlo y devolvió el error %d: %s
+tr.HandlePatcherError3=El parcheador no aparece donde debería después de descomprimirlo:
+tr.HandlePatcherErrorHint=Vuelve a ejecutar el instalador. Si el problema se repite, indica este mensaje al pedir ayuda.
 tr.ExceptionMsg3=Se produjo un error durante la instalación: 
 tr.FinishedText3a=No se pudo instalar la traducción de DELTARUNE debido a un error.
 tr.FinishedText3b=Pulsa «Finalizar» para salir del instalador.
@@ -899,7 +902,7 @@ end;
 
 function DownloadAndExtractFiles(): Boolean;
 var
-  LangESZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg, ArgString: String;
+  LangESZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg, ArgString, ExecErrorMsg: String;
   ResultCode: Integer;
 begin
   LangESZipPath  := ExpandConstant('{tmp}\lang_es.7z');
@@ -952,6 +955,21 @@ begin
     ProgressPage.SetText(CustomMessage('ProgressPage3d'), '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
 
+    // Extract7ZipArchive no ha protestado, pero eso no garantiza que el .exe
+    // esté ahí: un programa de seguridad puede haberlo retirado nada más
+    // escribirse, y el .7z podría traer una estructura distinta a la que
+    // espera esta ruta.
+    // Sin esta comprobación el caso «no está» y el caso «está pero Windows no
+    // lo deja arrancar» acababan los dos en el mismo mensaje sin datos.
+    if not FileExists(PatcherPath) then
+    begin
+      MsgBox(CustomMessage('HandlePatcherError3') + #13#10 + PatcherPath + #13#10
+             + #13#10 +
+             CustomMessage('HandlePatcherErrorHint'), mbCriticalError, MB_OK);
+      Result := False;
+      Exit;
+    end;
+
     ArgString := '';
     if PatchDeltaQuick then
       ArgString := ArgString + ' --droid';
@@ -971,7 +989,16 @@ begin
     end
     else
     begin
-      MsgBox(CustomMessage('HandlePatcherError2'), mbCriticalError, MB_OK);
+      // Exec solo devuelve False cuando el proceso ni siquiera llega a
+      // arrancar; entonces ResultCode no es el código de salida del
+      // parcheador, sino el error de Windows (2 = no se encuentra,
+      // 5 = acceso denegado, 225 = un programa de seguridad lo ha bloqueado).
+      // SysErrorMessage lo traduce al idioma del sistema.
+      ExecErrorMsg := Format(CustomMessage('HandlePatcherError2b'), [ResultCode, SysErrorMessage(ResultCode)]);
+
+      MsgBox(CustomMessage('HandlePatcherError2') + #13#10 + ExecErrorMsg + #13#10
+             + #13#10 +
+             CustomMessage('HandlePatcherErrorHint'), mbCriticalError, MB_OK);
       Result := False;
       Exit;
     end;
