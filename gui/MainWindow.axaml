@@ -2,27 +2,48 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="InstaladorLetraDelta.MainWindow"
         Title="Instalador LetraDelta"
+        Icon="/Assets/icono.png"
         Width="640" Height="520"
         CanResize="False"
         WindowStartupLocation="CenterScreen">
 
   <DockPanel Margin="28">
 
-    <!-- Cabecera común a todas las páginas -->
-    <StackPanel DockPanel.Dock="Top" Spacing="4">
-      <TextBlock x:Name="TituloPagina" FontSize="22" FontWeight="SemiBold" />
-      <TextBlock x:Name="SubtituloPagina" FontSize="13" Opacity="0.7" TextWrapping="Wrap" />
+    <!-- Cabecera común a todas las páginas.
+         El logo va recortado en un cuadrado redondeado a propósito: el arte
+         tiene el fondo negro opaco, así que como baldosa se lee igual de bien
+         en tema claro y en oscuro, mientras que recortarle el negro dejaría
+         agujeros dentro del propio dibujo. -->
+    <StackPanel DockPanel.Dock="Top">
+      <DockPanel>
+        <Border DockPanel.Dock="Left" Width="48" Height="48" CornerRadius="10"
+                ClipToBounds="True" Margin="0,0,14,0" VerticalAlignment="Top"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <Image Source="/Assets/logo.png" Width="48" Height="48" />
+        </Border>
+        <StackPanel VerticalAlignment="Center" Spacing="3">
+          <TextBlock x:Name="TituloPagina" FontSize="20" FontWeight="SemiBold"
+                     TextWrapping="Wrap" />
+          <TextBlock x:Name="SubtituloPagina" FontSize="13" Opacity="0.7" TextWrapping="Wrap" />
+        </StackPanel>
+      </DockPanel>
       <Separator Margin="0,12,0,0" />
     </StackPanel>
 
-    <!-- Botonera -->
-    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
-                HorizontalAlignment="Right" Spacing="10" Margin="0,18,0,0">
-      <Button x:Name="BotonCancelar" Content="Cancelar" Width="110" Click="AlCancelar" />
-      <Button x:Name="BotonAtras" Content="Atrás" Width="110" Click="AlAtras" />
-      <Button x:Name="BotonSiguiente" Content="Siguiente" Width="110"
-              IsDefault="True" Click="AlSiguiente" />
-    </StackPanel>
+    <!-- Botonera, con la versión a la izquierda: siempre visible, para que se
+         sepa de qué versión se habla al pedir o dar soporte. -->
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,18,0,0">
+      <TextBlock x:Name="EtiquetaVersion" DockPanel.Dock="Left"
+                 VerticalAlignment="Center" FontSize="11" Opacity="0.5" />
+      <StackPanel Orientation="Horizontal"
+                  HorizontalAlignment="Right" Spacing="10">
+        <Button x:Name="BotonCancelar" Content="Cancelar" Width="110" Click="AlCancelar" />
+        <Button x:Name="BotonAtras" Content="Atrás" Width="110" Click="AlAtras" />
+        <Button x:Name="BotonSiguiente" Content="Siguiente" Width="110"
+                IsDefault="True" Click="AlSiguiente" />
+      </StackPanel>
+    </DockPanel>
 
     <Panel Margin="0,18,0,0">
 

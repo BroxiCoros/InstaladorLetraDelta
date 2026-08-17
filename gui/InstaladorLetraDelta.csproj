@@ -38,6 +38,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- El icono de la ventana y el logo de la cabecera. Son PNG derivados de
+         icon.ico y logo.bmp, que usa Inno Setup: van versionados en vez de
+         generarse al compilar, por el mismo motivo que packaging/macos/icono-1024.png
+         (no depender de ImageMagick, y que el resultado no cambie sin querer). -->
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.0" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />

@@ -2,7 +2,42 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="InstaladorLetraDelta.App"
              RequestedThemeVariant="Default">
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <!-- Los avisos llevaban colores fijos (Goldenrod, IndianRed, SeaGreen),
+           pensados sobre fondo claro: en tema oscuro quedaban apagados. Cada
+           variante tiene ahora su propio tono, elegido para que se lea bien
+           sobre el fondo que le toca. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="AvisoCorrectoBrush" Color="#1A7F42" />
+          <SolidColorBrush x:Key="AvisoAtencionBrush" Color="#8A6100" />
+          <SolidColorBrush x:Key="AvisoErrorBrush"    Color="#B3261E" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="AvisoCorrectoBrush" Color="#5CC98B" />
+          <SolidColorBrush x:Key="AvisoAtencionBrush" Color="#E0B341" />
+          <SolidColorBrush x:Key="AvisoErrorBrush"    Color="#F08C84" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
   <Application.Styles>
     <FluentTheme />
+
+    <!-- El color del aviso se elige poniendo una clase desde el código, no
+         asignando un pincel. Así lo resuelve el tema en vigor y sigue siendo
+         correcto si el sistema cambia de claro a oscuro con la ventana abierta. -->
+    <Style Selector="TextBlock.correcto">
+      <Setter Property="Foreground" Value="{DynamicResource AvisoCorrectoBrush}" />
+    </Style>
+    <Style Selector="TextBlock.atencion">
+      <Setter Property="Foreground" Value="{DynamicResource AvisoAtencionBrush}" />
+    </Style>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="{DynamicResource AvisoErrorBrush}" />
+    </Style>
   </Application.Styles>
 </Application>

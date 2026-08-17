@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 
 namespace InstaladorLetraDelta;
@@ -10,6 +9,14 @@ public partial class MainWindow : Window
 {
     private enum Pagina { Bienvenida, Limpieza, Opciones, Carpeta, Progreso, Resultado }
 
+    /// <summary>
+    /// Las tres clases que dan color a un aviso. Están definidas en App.axaml,
+    /// una por variante del tema; aquí solo se dice cuál toca.
+    /// </summary>
+    private const string Correcto = "correcto";
+    private const string Atencion = "atencion";
+    private const string Error = "error";
+
     private Pagina _pagina = Pagina.Bienvenida;
     private bool _instalacionCorrecta;
     private CancellationTokenSource _cancelacion;
@@ -17,6 +24,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         AvaloniaXamlLoader.Load(this);
+
+        this.FindControl<TextBlock>("EtiquetaVersion").Text = "Versión " + VersionDelInstalador();
 
         TextosDePlataforma();
 
@@ -27,6 +36,29 @@ public partial class MainWindow : Window
             this.FindControl<TextBox>("CampoCarpeta").Text = carpetaJuego;
 
         MostrarPagina(Pagina.Bienvenida);
+    }
+
+    /// <summary>
+    /// La versión sale del ensamblado, que la toma de &lt;Version&gt; en el csproj,
+    /// para que no haya una segunda copia del número que se quede atrás.
+    /// </summary>
+    private static string VersionDelInstalador()
+    {
+        var version = typeof(MainWindow).Assembly.GetName().Version;
+        return version is null
+            ? ""
+            : $"{version.Major}.{version.Minor}.{version.Build}";
+    }
+
+    /// <summary>
+    /// Pone el color de un aviso mediante la clase que le corresponde y quita
+    /// las otras dos, para que no se acumulen al repetirse la validación.
+    /// </summary>
+    private static void Pintar(TextBlock aviso, string estado)
+    {
+        aviso.Classes.Set(Correcto, estado == Correcto);
+        aviso.Classes.Set(Atencion, estado == Atencion);
+        aviso.Classes.Set(Error, estado == Error);
     }
 
     /// <summary>
@@ -173,7 +205,7 @@ public partial class MainWindow : Window
                        + "que no es una copia limpia. Verifica la integridad de los archivos "
                        + "en Steam antes de continuar, para que el parche se aplique sobre los "
                        + "archivos originales.";
-            aviso.Foreground = Brushes.Goldenrod;
+            Pintar(aviso, Atencion);
         }
     }
 
@@ -221,7 +253,7 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(carpeta))
         {
             aviso.Text = "No se encontró DELTARUNE automáticamente. Indica la carpeta del juego.";
-            aviso.Foreground = Brushes.Goldenrod;
+            Pintar(aviso, Atencion);
             siguiente.IsEnabled = false;
             return;
         }
@@ -244,7 +276,7 @@ public partial class MainWindow : Window
             aviso.Text = OperatingSystem.IsMacOS()
                 ? "En esa carpeta no está DELTARUNE. Indica la carpeta que contiene DELTARUNE.app."
                 : "En esa carpeta no está DELTARUNE: falta chapter5_windows/data.win.";
-            aviso.Foreground = Brushes.IndianRed;
+            Pintar(aviso, Error);
             siguiente.IsEnabled = false;
             return;
         }
@@ -264,13 +296,13 @@ public partial class MainWindow : Window
                        + "copia no está limpia. Verifica la integridad de los archivos en Steam "
                        + "antes de continuar, para que el parche se aplique sobre los archivos "
                        + "originales.";
-            aviso.Foreground = Brushes.Goldenrod;
+            Pintar(aviso, Atencion);
             siguiente.IsEnabled = true;
             return;
         }
 
         aviso.Text = "Juego encontrado. Todo listo para instalar.";
-        aviso.Foreground = Brushes.SeaGreen;
+        Pintar(aviso, Correcto);
         siguiente.IsEnabled = true;
     }
 
