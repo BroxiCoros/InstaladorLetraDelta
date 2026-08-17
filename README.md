@@ -44,7 +44,7 @@ En la página de opciones del asistente puedes activar o desactivar una casilla:
 
 Si descargas previamente los archivos correspondientes y los colocas junto a `InstaladorLetraDelta.exe`, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Los nombres esperados son:
 
-- `lang_es.7z` — pack de español. Indispensable.
+- `lang.7z` — pack de español. Indispensable.
 - `scripts.7z` — *scripts* del mod. Indispensable.
 
 ---
@@ -76,7 +76,7 @@ En Steam, clic derecho sobre *DELTARUNE* → «Propiedades» → «Archivos inst
 
 ### Instalación sin conexión
 
-Igual que en Windows: si dejas `lang_es.7z` o `scripts.7z` en la misma carpeta que el AppImage, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Son los mismos nombres que en la [sección de Windows](#instalación-sin-conexión).
+Igual que en Windows: si dejas `lang.7z` o `scripts.7z` en la misma carpeta que el AppImage, el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos. Son los mismos nombres que en la [sección de Windows](#instalación-sin-conexión).
 
 ---
 
@@ -105,7 +105,7 @@ Igual que en las demás plataformas: en Steam, clic derecho sobre *DELTARUNE* �
 
 ### Instalación sin conexión
 
-Igual que en Windows y Linux: si dejas `lang_es.7z` o `scripts.7z` en la misma carpeta donde está el instalador (fuera del `.dmg`, ver el paso 2), el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos.
+Igual que en Windows y Linux: si dejas `lang.7z` o `scripts.7z` en la misma carpeta donde está el instalador (fuera del `.dmg`, ver el paso 2), el asistente te preguntará si prefieres usar esos archivos locales en lugar de descargarlos.
 
 ---
 

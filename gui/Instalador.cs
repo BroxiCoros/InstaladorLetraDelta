@@ -20,7 +20,7 @@ public sealed record Avance(string Texto, double? Porcentaje);
 public sealed class Instalador
 {
     // Pack de español americano (LetraDelta).
-    private const string UrlLangEs = "https://github.com/BroxiCoros/LetraDelta/releases/download/latest/lang.7z";
+    private const string UrlLang = "https://github.com/BroxiCoros/LetraDelta/releases/download/latest/lang.7z";
     // Scripts del mod. Los Borders.csx y los PNG de NXRUNE viajan dentro, así
     // que la opción de bordes no necesita ninguna descarga adicional.
     private const string UrlScripts = "https://github.com/BroxiCoros/DeltranslatePatch/releases/download/latest/scripts.7z";
@@ -67,16 +67,16 @@ public sealed class Instalador
 
         try
         {
-            string langEs = await ObtenerPackAsync("lang_es.7z", UrlLangEs, temporal,
-                                                   "Descargando archivos de idioma (español)...",
-                                                   0, 32, ct);
+            string lang = await ObtenerPackAsync("lang.7z", UrlLang, temporal,
+                                                 "Descargando archivos de idioma (español)...",
+                                                 0, 32, ct);
             string scripts = await ObtenerPackAsync("scripts.7z", UrlScripts, temporal,
                                                     "Descargando scripts...", 32, 45, ct);
 
             // El pack trae su propia subcarpeta lang/es. El inglés original no
             // se descarga: el propio mod lo conserva.
             Reportar("Descomprimiendo archivos de idioma (español)...", 45);
-            await DescomprimirAsync(langEs, carpetaJuego, ct);
+            await DescomprimirAsync(lang, carpetaJuego, ct);
 
             Reportar("Descomprimiendo scripts...", 52);
             string carpetaScripts = Path.Combine(temporal, "scripts");
@@ -115,7 +115,7 @@ public sealed class Instalador
     /// La pregunta no es un trámite: los packs se llaman siempre igual, así que
     /// uno olvidado de hace meses en la carpeta de Descargas instalaría una
     /// traducción vieja sin que nadie se enterara. Windows pregunta desde
-    /// siempre (OfflineQuestion1a en setup.iss) y aquí se hacía en silencio.
+    /// siempre (OfflineQuestion1 en setup.iss) y aquí se hacía en silencio.
     /// </summary>
     private async Task<string> ObtenerPackAsync(string nombre, string url, string temporal,
                                                 string texto, double desde, double hasta,
